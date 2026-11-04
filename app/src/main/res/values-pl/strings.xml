@@ -36,6 +36,10 @@
     <string name="gestures_two_finger_swipe_left_action">Przeciągnięcie dwoma palcami w lewo</string>
     <string name="gestures_two_finger_swipe_right_action">Przeciągnięcie dwoma palcami w prawo</string>
 
+    <string name="start_in_planner">Otwieraj tygodniowy planer przy uruchomieniu aplikacji</string>
+    <string name="palm_guard">Ochrona dłoni: ignoruj gesty palców podczas pisania i przy dolnej krawędzi</string>
+    <string name="pen_button_toggle">Boczny przycisk pióra przełącza między piórem a gumką</string>
+
     <string name="gesture_action_undo">Cofnij</string>
     <string name="gesture_action_redo">Ponów</string>
     <string name="gesture_action_previous_page">Poprzednia strona</string>
