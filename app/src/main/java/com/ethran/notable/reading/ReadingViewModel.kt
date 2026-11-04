@@ -44,9 +44,14 @@ class ReadingViewModel @Inject constructor(@ApplicationContext private val conte
     private val chapterRepo = ChapterRepository(File(context.filesDir, "reading-chapters"))
     private var chaptersJob: Job? = null
 
-    /** Reads NeoReader's data off the main thread; the last data stays on screen while it loads or if reading fails. */
+    private val refreshes = OneAtATime()
+
+    /**
+     * Reads NeoReader's data off the main thread; the last data stays on screen while it loads or if reading fails.
+     * A call while a refresh runs is dropped: opening the tab and resuming Home both ask for one at the same moment.
+     */
     fun refresh() {
-        viewModelScope.launch(Dispatchers.IO) {
+        refreshes.launch(viewModelScope, Dispatchers.IO) {
             val books = NeoReaderSource.library(context)
             val events = NeoReaderSource.events(context)
             val highlights = NeoReaderSource.highlights(context)

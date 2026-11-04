@@ -41,17 +41,34 @@ object NeoReaderSource {
     private fun Cursor.str(name: String): String? = getColumnIndex(name).takeIf { it >= 0 }?.let { if (isNull(it)) null else getString(it) }
     private fun Cursor.lng(name: String): Long = str(name)?.toLongOrNull() ?: 0L
 
-    private inline fun <T> query(context: Context, uri: Uri, selection: String? = null, map: (Cursor) -> T?): List<T> =
-        try {
-            context.contentResolver.query(uri, null, selection, null, null)?.use { c ->
-                buildList { while (c.moveToNext()) map(c)?.let(::add) }
-            } ?: emptyList()
-        } catch (e: Exception) {
-            Log.w(TAG, "query $uri failed: ${e.javaClass.simpleName}: ${e.message}")
-            emptyList()
-        }
+    /** The columns each mapping below reads: every refresh crosses Binder, so the rest of each table stays behind. */
+    private val LIBRARY_COLUMNS = arrayOf(
+        "nativeAbsolutePath", "progress", "title", "name", "authors", "series", "lastAccess", "createdAt", "readingStatus", "hashTag"
+    )
+    private val STATS_COLUMNS = arrayOf(
+        "action", "type", "eventTime", "docId", "md5", "durationTime", "currPage", "readingProgress", "sid", "path"
+    )
+    private val ANNOTATION_COLUMNS = arrayOf("quote", "createdAt", "md5", "docId")
 
-    fun library(context: Context): List<NrBook> = query(context, LIBRARY) { c ->
+    private fun <T> query(context: Context, uri: Uri, columns: Array<String>, map: (Cursor) -> T?): List<T> {
+        fun read(projection: Array<String>?): List<T> = context.contentResolver.query(uri, projection, null, null, null)?.use { c ->
+            buildList { while (c.moveToNext()) map(c)?.let(::add) }
+        } ?: emptyList()
+        return try {
+            read(columns)
+        } catch (e: Exception) {
+            // A newer NeoReader may have dropped or renamed a column: read every column, missing ones read as empty.
+            Log.w(TAG, "query $uri with columns failed: ${e.javaClass.simpleName}: ${e.message}")
+            try {
+                read(null)
+            } catch (e: Exception) {
+                Log.w(TAG, "query $uri failed: ${e.javaClass.simpleName}: ${e.message}")
+                emptyList()
+            }
+        }
+    }
+
+    fun library(context: Context): List<NrBook> = query(context, LIBRARY, LIBRARY_COLUMNS) { c ->
         val path = c.str("nativeAbsolutePath") ?: return@query null
         val progress = c.str("progress")?.split("/")
         val page = progress?.getOrNull(0)?.toIntOrNull() ?: 0
@@ -68,7 +85,7 @@ object NeoReaderSource {
         )
     }
 
-    fun events(context: Context): List<NrEvent> = query(context, STATS) { c ->
+    fun events(context: Context): List<NrEvent> = query(context, STATS, STATS_COLUMNS) { c ->
         if (c.str("action") == "delete") return@query null
         NrEvent(
             type = c.str("type")?.toIntOrNull() ?: return@query null,
@@ -78,7 +95,7 @@ object NeoReaderSource {
         )
     }
 
-    fun highlights(context: Context): List<NrHighlight> = query(context, ANNOTATION) { c ->
+    fun highlights(context: Context): List<NrHighlight> = query(context, ANNOTATION, ANNOTATION_COLUMNS) { c ->
         val q = c.str("quote")?.trim()?.takeIf { it.length > 20 } ?: return@query null
         NrHighlight(q, c.lng("createdAt"), c.str("md5"), c.str("docId"))
     }
