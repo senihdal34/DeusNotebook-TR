@@ -4,7 +4,7 @@
     <string name="writing_language">Yazı dili</string>
     <string name="writing_language_hint">El yazını tanıma dili. Notlar metne çevrilirken kullanılır.</string>
     <string name="planner_notebook">Planlayıcı</string>
-    <string name="planner_title">Haftalık Planlayıcı</string>
+    <string name="planner_title">Haftalık Plan</string>
     <string name="planner_week_title">Hafta %1$s</string>
     <string name="planner_year_complete">Yıl %%%1$d tamamlandı</string>
     <string name="planner_todo">Yapılacaklar</string>

@@ -26,13 +26,16 @@ object PlannerSync {
         )
     }
 
+    /** True when the target region already holds exactly the copies (their ids come from the source stroke and the target page). */
+    fun unchanged(old: List<Stroke>, moved: List<Stroke>): Boolean = old.map { it.id }.toSet() == moved.map { it.id }.toSet()
+
     /** Replaces the region [dstTop, dstTop + height) of the target with the source region starting at [srcTop]. */
     suspend fun copyRegion(app: AppRepository, filesDir: File, sourceId: String, srcTop: Float, targetId: String, dstTop: Float, height: Float) {
         val source = app.pageRepository.getWithStrokeById(sourceId).strokes
         val target = app.pageRepository.getWithStrokeById(targetId).strokes
         val moved = copies(inRegion(source, srcTop, srcTop + height), dstTop - srcTop, targetId)
         val old = inRegion(target, dstTop, dstTop + height)
-        if (old.isEmpty() && moved.isEmpty()) return
+        if (unchanged(old, moved)) return   // e.g. the second sync after an explicit one: nothing to redraw, no cache to drop
         if (old.isNotEmpty()) app.strokeRepository.deleteAll(old.map { it.id })
         if (moved.isNotEmpty()) app.strokeRepository.create(moved)
         // The target is shown from its saved preview and the memory cache: drop both so it is drawn from the strokes.

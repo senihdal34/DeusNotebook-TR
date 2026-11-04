@@ -109,7 +109,7 @@ object OnyxHWREngine {
      */
     private suspend fun ensureInitialized(svc: IHWRService, viewWidth: Float, viewHeight: Float) {
         if (initialized) return
-        log.i("Initializing OnyxHWR recognizer...")
+        log.i("Initializing OnyxHWR recognizer (lang=$language)...")
 
         val inputArgs = HWRInputArgs().apply {
             lang = language

@@ -42,4 +42,13 @@ class PlannerSyncTest {
         assertEquals(PlannerLayout.week(2480f).step, PlannerLayout.dayStep(2480f), 0.001f)
         assertTrue(PlannerLayout.dayLines(2480f) > PlannerLayout.week(2480f).lines)
     }
+
+    @Test fun `a region that already holds the copies needs no sync`() {
+        val copies = PlannerSync.copies(listOf(stroke("b", 500f), stroke("c", 520f)), -300f, "day")
+        assertTrue(PlannerSync.unchanged(copies.reversed(), copies))
+        assertTrue(PlannerSync.unchanged(emptyList(), emptyList()))
+        // the target's own ink (written on the day page) or a new source stroke means work to do
+        assertTrue(!PlannerSync.unchanged(copies + stroke("own", 250f, "day"), copies))
+        assertTrue(!PlannerSync.unchanged(copies, copies + PlannerSync.copies(listOf(stroke("d", 530f)), -300f, "day")))
+    }
 }

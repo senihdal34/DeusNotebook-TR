@@ -4,7 +4,7 @@
     <string name="writing_language">Język pisma</string>
     <string name="writing_language_hint">Język Twojego pisma. Używany przy rozpoznawaniu notatek jako tekstu.</string>
     <string name="planner_notebook">Planer</string>
-    <string name="planner_title">Planer tygodniowy</string>
+    <string name="planner_title">Plan tygodnia</string>
     <string name="planner_week_title">Tydzień %1$s</string>
     <string name="planner_year_complete">Rok ukończony w %1$d%%</string>
     <string name="planner_todo">Do zrobienia</string>

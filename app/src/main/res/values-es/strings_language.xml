@@ -4,7 +4,7 @@
     <string name="writing_language">Idioma de escritura</string>
     <string name="writing_language_hint">Idioma de tu escritura a mano. Se usa al reconocer las notas como texto.</string>
     <string name="planner_notebook">Planificador</string>
-    <string name="planner_title">Planificador semanal</string>
+    <string name="planner_title">Plan semanal</string>
     <string name="planner_week_title">Semana %1$s</string>
     <string name="planner_year_complete">Año completado al %1$d%%</string>
     <string name="planner_todo">Pendientes</string>
