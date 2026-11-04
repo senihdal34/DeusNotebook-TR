@@ -2,6 +2,8 @@ package com.ethran.notable.planner
 
 import com.ethran.notable.data.db.Kv
 import com.ethran.notable.data.db.KvDao
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import java.time.LocalDate
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -17,7 +19,7 @@ object PlannerDone {
 class PlannerDoneRepository @Inject constructor(private val dao: KvDao) {
     private fun key(day: LocalDate) = "plannerdone:$day"
 
-    suspend fun load(dates: List<LocalDate>) {
+    suspend fun load(dates: List<LocalDate>) = lock.withLock {
         val loaded = dates.associateWith { d ->
             dao.get(key(d))?.value?.split(",")?.mapNotNull { it.trim().toIntOrNull() }?.toSet().orEmpty()
         }
@@ -25,11 +27,16 @@ class PlannerDoneRepository @Inject constructor(private val dao: KvDao) {
     }
 
     /** Ticks the line or un-ticks it; returns the new state of that day. */
-    suspend fun toggle(day: LocalDate, line: Int): Set<Int> {
+    suspend fun toggle(day: LocalDate, line: Int): Set<Int> = lock.withLock {
         val now = PlannerDone.lines(day)
         val next = if (line in now) now - line else now + line
         PlannerDone.days = PlannerDone.days + (day to next)
         if (next.isEmpty()) dao.delete(key(day)) else dao.set(Kv(key(day), next.sorted().joinToString(",")))
-        return next
+        next
+    }
+
+    private companion object {
+        // Read-modify-write of [PlannerDone.days] and the stored line list: two quick taps must not both read the old set.
+        val lock = Mutex()
     }
 }
