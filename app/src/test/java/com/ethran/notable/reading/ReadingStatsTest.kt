@@ -70,6 +70,16 @@ class ReadingStatsTest {
         assertTrue(d.continueReading.isEmpty())
     }
 
+    @Test fun theNewestProgressSnapshotWinsWhateverTheRowOrder() {
+        val epub = book.copy(path = "/storage/emulated/0/Books/E.epub", progressPage = 0, progressTotal = 0)
+        fun snap(t: Long, pct: Double) = NrEvent(5, t, "d2", "m2", 0, 0, pct, "s", epub.path)
+        val ev = listOf(snap(ms(2026, 10, 30), 60.0), snap(ms(2026, 10, 10), 20.0), snap(ms(2026, 10, 20), 40.0))
+        for (order in listOf(ev, ev.reversed(), ev.shuffled(java.util.Random(3)))) {
+            val d = run(order, ms(2026, 10, 31), listOf(epub))
+            assertEquals(60.0, d.books.single().progress, 0.001)
+        }
+    }
+
     @Test fun deletedFilesDisappear() {
         val d = ReadingStats.build(listOf(book), emptyList(), emptyList(), ms(2026, 10, 31), zone, exists = { false })
         assertEquals(0, d.totalBooks)
