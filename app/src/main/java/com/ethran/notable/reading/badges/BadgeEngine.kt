@@ -3,8 +3,9 @@ package com.ethran.notable.reading.badges
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
-import java.time.format.TextStyle
-import java.util.Locale
+import com.ethran.notable.R
+import com.ethran.notable.reading.RS
+import com.ethran.notable.reading.ReadingDates
 
 /**
  * The badge rules: what each badge counts, when it is earned, which one is next and what to say about it. Pure and
@@ -174,10 +175,10 @@ object BadgeEngine {
     fun etaLabel(days: Double?): String? {
         if (days == null || days.isNaN() || days <= 0) return null
         return when {
-            days < 1.5 -> "About a day to go"
-            days < 10 -> "About ${Math.floor(days + 0.5).toInt()} days to go"
-            days < 60 -> Math.floor(days / 7 + 0.5).toInt().let { if (it == 1) "About a week to go" else "About $it weeks to go" }
-            days < 730 -> "About ${Math.floor(days / 30 + 0.5).toInt()} months to go"
+            days < 1.5 -> RS.get(R.string.badge_eta_day)
+            days < 10 -> Math.floor(days + 0.5).toInt().let { RS.plural(R.plurals.badge_eta_days, it, it) }
+            days < 60 -> Math.floor(days / 7 + 0.5).toInt().let { if (it == 1) RS.get(R.string.badge_eta_week) else RS.plural(R.plurals.badge_eta_weeks, it, it) }
+            days < 730 -> Math.floor(days / 30 + 0.5).toInt().let { RS.plural(R.plurals.badge_eta_months, it, it) }
             else -> null
         }
     }
@@ -208,10 +209,24 @@ object BadgeEngine {
         val today = Instant.ofEpochMilli(now).atZone(zone).toLocalDate()
         val days = today.toEpochDay() - day.toEpochDay()
         return when {
-            days <= 0 -> "Earned today"
-            days == 1L -> "Earned yesterday"
-            days < 7 -> "Earned ${day.dayOfWeek.getDisplayName(TextStyle.FULL, Locale.ENGLISH)}"
-            else -> "Earned ${day.dayOfMonth} ${day.month.getDisplayName(TextStyle.SHORT, Locale.ENGLISH)}"
+            days <= 0 -> RS.get(R.string.badge_earned_today)
+            days == 1L -> RS.get(R.string.badge_earned_yesterday)
+            days < 7 -> RS.get(R.string.badge_earned_weekday, ReadingDates.weekday(day.dayOfWeek, full = true))
+            else -> RS.get(R.string.badge_earned_date, ReadingDates.dayMonth(day))
+        }
+    }
+
+    /** The same day without the word "Earned": "today", "yesterday", "Monday", "12 Oct" (the list screen's right-hand column). */
+    fun earnedDayLabel(at: Long?, now: Long, zone: ZoneId): String? {
+        if (at == null) return null
+        val day = Instant.ofEpochMilli(at).atZone(zone).toLocalDate()
+        val today = Instant.ofEpochMilli(now).atZone(zone).toLocalDate()
+        val days = today.toEpochDay() - day.toEpochDay()
+        return when {
+            days <= 0 -> RS.get(R.string.badge_earned_short_today)
+            days == 1L -> RS.get(R.string.badge_earned_short_yesterday)
+            days < 7 -> ReadingDates.weekday(day.dayOfWeek, full = true)
+            else -> ReadingDates.dayMonth(day)
         }
     }
 

@@ -21,7 +21,9 @@ import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.inset
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import com.ethran.notable.R
 import com.ethran.notable.reading.badges.Badge
 import com.ethran.notable.reading.badges.BadgeBoard
 import com.ethran.notable.reading.badges.BadgeEngine
@@ -140,7 +142,7 @@ private fun ProgressLine(b: Badge, whenText: String?, s: Double, w: Int? = null,
     if (b.earned) {
         BText(whenText.orEmpty(), s, color = Ink.g4, w = w, align = align)
     } else {
-        BRuns(listOf(Run(countText(b.progress), b = true, color = Ink.black), Run(" of ${countText(b.threshold?.toDouble())}")), s, Ink.g4, w, align)
+        BRuns(listOf(Run(countText(b.progress), b = true, color = Ink.black), Run(" " + stringResource(R.string.reading_of_n, countText(b.threshold?.toDouble())))), s, Ink.g4, w, align)
     }
 }
 
@@ -150,7 +152,7 @@ private fun HintBox(w: Int, hh: Int, hint: String) {
     val pad = bx.px(12)
     val iw = w - 2 * pad
     WPad(w, hh, pad) {
-        BHead(iw, "Next badge", { Ic("award", 17, BoardColour.icon("badge"), iconSw(2.25f)) })
+        BHead(iw, stringResource(R.string.reading_next_badge), { Ic("award", 17, BoardColour.icon("badge"), iconSw(2.25f)) })
         VGap(bx.px(6))
         BText(hint, 13.0, color = Ink.g4, lines = 3, w = iw)
     }
@@ -167,15 +169,15 @@ fun BadgeWidget(c: BoardCtx, w: Int, hh: Int) {
     val bx = LocalBx.current
     val measurer = rememberMeasurer()
     val board = c.badges
-    if (board == null) { HintBox(w, hh, "Badges show up once your reading has loaded."); return }
-    if (board.next == null && board.latest == null) { HintBox(w, hh, "Read a little and your first badge shows up here."); return }
+    if (board == null) { HintBox(w, hh, stringResource(R.string.reading_badges_loading)); return }
+    if (board.next == null && board.latest == null) { HintBox(w, hh, stringResource(R.string.reading_badges_first)); return }
     val pad = bx.px(12)
     val iw = w - 2 * pad
     val ih = hh - 2 * pad
     val tall = ih > bx.px(150)
     val earned = board.next == null || (board.fresh && !tall)
     val b = (if (earned) board.latest else board.next) ?: return
-    val label = if (earned) (if (board.fresh) "New badge" else "Latest badge") else "Next badge"
+    val label = stringResource(if (earned) (if (board.fresh) R.string.reading_new_badge else R.string.reading_latest_badge) else R.string.reading_next_badge)
     val whenText = BadgeEngine.earnedLabel(b.earnedAt, c.nowMs, ZoneId.systemDefault())
     val thin = max(1, bx.px(0.75))
 
@@ -188,7 +190,7 @@ fun BadgeWidget(c: BoardCtx, w: Int, hh: Int) {
             val tw = iw - dia - bx.px(14)
             if (dia < bx.px(90) || tw < bx.px(120)) continue
             WPad(w, hh, pad) {
-                BHead(iw, label, { BText("${board.earned} of ${board.total}", 12.0, color = Ink.g4) })
+                BHead(iw, label, { BText(stringResource(R.string.reading_n_of_m, board.earned, board.total), 12.0, color = Ink.g4) })
                 VGap(bx.px(12))
                 Row(Modifier.width(bx.d(iw)).height(bx.d(room)), verticalAlignment = Alignment.CenterVertically) {
                     BadgeMedal(b, dia)
@@ -298,8 +300,8 @@ private fun BadgeRow(b: Badge, nowMs: Long, zone: ZoneId) {
         }
         HGap(bx.px(10))
         Column(horizontalAlignment = Alignment.End) {
-            BText(if (b.secret) "Secret" else b.rarity.label, 12.0, color = Ink.g4)
-            if (b.earned) BText(BadgeEngine.earnedLabel(b.earnedAt, nowMs, zone).orEmpty().removePrefix("Earned "), 12.0, bold = true)
+            BText(if (b.secret) stringResource(R.string.reading_secret) else b.rarity.label, 12.0, color = Ink.g4)
+            if (b.earned) BText(BadgeEngine.earnedDayLabel(b.earnedAt, nowMs, zone).orEmpty(), 12.0, bold = true)
         }
     }
     BRect(1, max(1, bx.px(0.75)), Ink.gc, modifier = Modifier.fillMaxWidth())
@@ -309,14 +311,14 @@ private fun BadgeRow(b: Badge, nowMs: Long, zone: ZoneId) {
 @Composable
 internal fun BadgeListScreen(board: BadgeBoard?, nowMs: Long, zone: ZoneId, back: () -> Unit) {
     val bx = LocalBx.current
-    ScreenTitle("Badges", back, right = board?.let { { BText("${it.earned} of ${it.total}", 13.0, color = Ink.g4) } })
+    ScreenTitle(stringResource(R.string.reading_badges), back, right = board?.let { { BText(stringResource(R.string.reading_n_of_m, it.earned, it.total), 13.0, color = Ink.g4) } })
     if (board == null) {
-        BText("Badges show up once your reading has loaded.", 14.0, italic = true, serif = true, color = Ink.g4, lines = 3)
+        BText(stringResource(R.string.reading_badges_loading), 14.0, italic = true, serif = true, color = Ink.g4, lines = 3)
         return
     }
     val s = BadgeEngine.sections(board.badges)
-    if (s.earned.isNotEmpty()) { SectionHeader("Earned", s.earned.size); s.earned.forEach { BadgeRow(it, nowMs, zone) } }
-    if (s.inProgress.isNotEmpty()) { SectionHeader("In progress", s.inProgress.size); s.inProgress.forEach { BadgeRow(it, nowMs, zone) } }
-    if (s.locked.isNotEmpty()) { SectionHeader("Locked", s.locked.size); s.locked.forEach { BadgeRow(it, nowMs, zone) } }
+    if (s.earned.isNotEmpty()) { SectionHeader(stringResource(R.string.reading_earned), s.earned.size); s.earned.forEach { BadgeRow(it, nowMs, zone) } }
+    if (s.inProgress.isNotEmpty()) { SectionHeader(stringResource(R.string.reading_in_progress), s.inProgress.size); s.inProgress.forEach { BadgeRow(it, nowMs, zone) } }
+    if (s.locked.isNotEmpty()) { SectionHeader(stringResource(R.string.reading_locked), s.locked.size); s.locked.forEach { BadgeRow(it, nowMs, zone) } }
     VGap(bx.px(12))
 }

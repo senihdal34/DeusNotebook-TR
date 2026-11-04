@@ -20,6 +20,8 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class BadgeEngineTest {
+    init { EnglishStrings.install() }   // the logic speaks the app language; the test reads the English file
+
     private val zone = ZoneId.of("Europe/Istanbul")
     private val today = LocalDate.of(2026, 10, 31)
     private fun ms(m: Int, d: Int, h: Int = 12) = ZonedDateTime.of(2026, m, d, h, 0, 0, 0, zone).toInstant().toEpochMilli()
@@ -385,7 +387,7 @@ class BadgeEngineTest {
     @Test fun aSecretBadgeShowsAMaskUntilEarned() {
         val def = BadgeCatalogue.get("early_bird")!!
         val locked = Badge(def, null, false, null)
-        assertEquals(Badge.SECRET_NAME, locked.name); assertEquals("lock", locked.icon); assertEquals(Rarity.Common, locked.rarity)
+        assertEquals("Secret badge", locked.name); assertEquals("Keep reading to reveal this badge.", locked.description); assertEquals("lock", locked.icon); assertEquals(Rarity.Common, locked.rarity)
         assertNull(locked.threshold); assertNull(locked.fraction)
         val earned = Badge(def, null, true, 5L)
         assertEquals("Early Bird", earned.name); assertEquals("sunrise", earned.icon); assertEquals(Rarity.Rare, earned.rarity)

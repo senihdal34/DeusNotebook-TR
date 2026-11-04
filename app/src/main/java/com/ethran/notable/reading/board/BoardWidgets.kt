@@ -20,6 +20,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
+import com.ethran.notable.R
+import com.ethran.notable.reading.RS
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -78,6 +82,8 @@ fun HeroWidget(c: BoardCtx, w: Int, hh: Int) {
     val soft = BoardColour.onInk(c.lead, Ink.gc)
     val author = BoardColour.onInk(c.lead, Ink.gd)
     val track = BoardColour.inkTrack(c.lead, Ink.g5)
+    val resumeFull = stringResource(R.string.reading_resume_reading)
+    val resumeShort = stringResource(R.string.reading_resume)
     if (book == null) {
         EmptyHero(c, w, hh, pad, label)
         return
@@ -94,7 +100,7 @@ fun HeroWidget(c: BoardCtx, w: Int, hh: Int) {
     val fixed = bx.lh1(12) + labelGap + (if (hasAuthor) authorGap + bx.lh1(15) else 0) + progressGap + bx.px(6) + metaGap + bx.lh1(13) + actionGap + bx.px(40)
     val tf = fitTitle(measurer, bx, book.title, true, false, tw, listOf(26.0, 23.0, 20.0, 18.0, 16.0), 3, max(coverH - fixed, bx.lh(16)))
     // The Resume button and the round "more" button side by side when the column is wide enough, else Resume alone.
-    val btnTextFull = measurer.measure(AnnotatedString("Resume reading"), boardStyle(bx, 14.0, bold = true), maxLines = 1, softWrap = false).size.width
+    val btnTextFull = measurer.measure(AnnotatedString(resumeFull), boardStyle(bx, 14.0, bold = true), maxLines = 1, softWrap = false).size.width
     val fullBtnW = bx.px(13) + bx.px(14) + bx.px(8) + btnTextFull + bx.px(16)
     val withGhost = fullBtnW + bx.px(8) + bx.px(40) <= tw
     Row(Modifier.size(bx.d(w), bx.d(hh)), verticalAlignment = Alignment.Top) {
@@ -107,7 +113,7 @@ fun HeroWidget(c: BoardCtx, w: Int, hh: Int) {
         HGap(gutter)
         Column(Modifier.width(bx.d(tw)).fillMaxHeight().padding(vertical = bx.d(pad))) {
             Row(Modifier.width(bx.d(tw)), verticalAlignment = Alignment.CenterVertically) {
-                Box(Modifier.weight(1f)) { BText("Continue reading", 12.0, bold = true, color = label) }
+                Box(Modifier.weight(1f)) { BText(stringResource(R.string.reading_continue_reading), 12.0, bold = true, color = label) }
                 if (total > 1) {
                     BText("1 / $total", 12.0, color = label)
                     HGap(bx.px(2))
@@ -126,12 +132,12 @@ fun HeroWidget(c: BoardCtx, w: Int, hh: Int) {
             BRuns(
                 buildList {
                     add(Run(BoardData.pctLabel(pct), b = true, color = fillCol))
-                    book.minutesLeft?.let { add(Run(" · ${BoardData.duration(it)} left", color = soft)) }
+                    book.minutesLeft?.let { add(Run(" · " + stringResource(R.string.reading_time_left, BoardData.duration(it)), color = soft)) }
                 }, 13.0, w = tw
             )
             VGap(actionGap)
             Row(verticalAlignment = Alignment.CenterVertically) {
-                PillButton(if (withGhost) "Resume reading" else "Resume", "play") { c.onOpen(book) }
+                PillButton(if (withGhost) resumeFull else resumeShort, "play") { c.onOpen(book) }
                 if (withGhost) {
                     HGap(bx.px(8))
                     BCircle(bx.px(40), border = max(1, bx.px(1.5)), borderCol = Ink.white, modifier = Modifier.tapOrHold({ c.onInfo(book) })) {
@@ -166,25 +172,26 @@ private fun EmptyHero(c: BoardCtx, w: Int, hh: Int, pad: Int, label: Color) {
     val iw = w - 2 * pad
     val ih = hh - 2 * pad
     val picks = c.d.shelf("random")
+    val shuffleCd = stringResource(R.string.reading_shuffle_picks)
     val g2 = bx.px(8)
     val btnH = bx.px(38)
     val ch = min(bx.px(120), ih - bx.lh1(11) - bx.px(3) - 2 * bx.lh(16) - bx.px(10) - bx.px(10) - btnH)
     val n = min(3, picks.size)
     val cw = if (n > 0) min((ch * 2 / 3.0 + 0.5).toInt(), (iw - (n - 1) * g2) / n) else 0
     WPad(w, hh, pad) {
-        BText("Start reading", 11.0, bold = true, color = label, w = iw)
+        BText(stringResource(R.string.reading_start_reading), 11.0, bold = true, color = label, w = iw)
         VGap(bx.px(3))
-        BText("Pick a book from your library to begin", 16.0, bold = true, color = Ink.white, lines = 2, w = iw)
+        BText(stringResource(R.string.reading_pick_book), 16.0, bold = true, color = Ink.white, lines = 2, w = iw)
         Flex()
         Row(horizontalArrangement = Arrangement.spacedBy(bx.d(g2)), verticalAlignment = Alignment.Bottom) {
             picks.take(n).forEach { b -> Box(Modifier.tapOrHold({ c.onOpen(b) }, { c.onInfo(b) })) { BCover(b, cw, (cw * 1.5 + 0.5).toInt(), max(1, bx.px(1)), Ink.g6) } }
         }
         VGap(bx.px(10))
         Row(
-            Modifier.height(bx.d(btnH)).semantics { contentDescription = "Shuffle picks" }.clip(RoundedCornerShape(bx.d(btnH / 2))).background(Ink.white).tapOrHold({ c.onShuffle() }),
+            Modifier.height(bx.d(btnH)).semantics { contentDescription = shuffleCd }.clip(RoundedCornerShape(bx.d(btnH / 2))).background(Ink.white).tapOrHold({ c.onShuffle() }),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            HGap(bx.px(13)); Ic("shuffle", 16, Ink.black, 2.25f); HGap(bx.px(8)); BText("Shuffle", 14.0, bold = true); HGap(bx.px(16))
+            HGap(bx.px(13)); Ic("shuffle", 16, Ink.black, 2.25f); HGap(bx.px(8)); BText(stringResource(R.string.reading_shuffle), 14.0, bold = true); HGap(bx.px(16))
         }
     }
 }
@@ -206,14 +213,14 @@ fun StreakWidget(c: BoardCtx, w: Int, hh: Int) {
     val dotGap = if (wide) bx.px(7) else max(bx.px(3), (iw - 7 * bx.px(9)) / 6)
     val ink = BoardColour.ink("streak", Ink.black)
     WPad(w, hh, pad) {
-        BHead(iw, "Streak", { Ic("flame", 17, ink, iconSw(2.25f)) })
+        BHead(iw, stringResource(R.string.reading_streak), { Ic("flame", 17, ink, iconSw(2.25f)) })
         Flex()
-        if (n > 0) BRuns(listOf(Run("$n", b = true, s = valS.toDouble()), Run(" " + if (n == 1) "day" else "days", color = Ink.g4)), 13.0, w = iw)
-        else BRuns(listOf(Run("Read today", b = true, s = min(valS, 18).toDouble())), 13.0, w = iw)
+        if (n > 0) BRuns(listOf(Run("$n", b = true, s = valS.toDouble()), Run(" " + pluralStringResource(R.plurals.reading_unit_days, n), color = Ink.g4)), 13.0, w = iw)
+        else BRuns(listOf(Run(stringResource(R.string.reading_read_today), b = true, s = min(valS, 18).toDouble())), 13.0, w = iw)
         Flex()
         val dotRow: @Composable () -> Unit = { Row(horizontalArrangement = Arrangement.spacedBy(bx.d(dotGap))) { c.d.streakWeek.forEach { BDot(dotSize, it, ink) } } }
         if (wide) {
-            Row(Modifier.width(bx.d(iw)), verticalAlignment = Alignment.CenterVertically) { dotRow(); Flex(); BText("best ${c.d.longestStreak}", 12.0, color = Ink.g4) }
+            Row(Modifier.width(bx.d(iw)), verticalAlignment = Alignment.CenterVertically) { dotRow(); Flex(); BText(stringResource(R.string.reading_best_streak_short, c.d.longestStreak), 12.0, color = Ink.g4) }
         } else dotRow()
     }
 }
@@ -230,18 +237,20 @@ fun WeekWidget(c: BoardCtx, w: Int, hh: Int) {
     val barW = min(bx.px(22), (iw - 6 * bx.px(6)) / 7)
     val gap = (iw - 7 * barW) / 6
     val base = max(1, bx.px(1))
-    val long = if (c.d.weekMinutes > 0) BoardData.duration(c.d.weekMinutes) else "Nothing yet"
-    val short = if (c.d.weekMinutes > 0) BoardData.shortDuration(c.d.weekMinutes) else "Nothing yet"
+    val nothingYet = stringResource(R.string.reading_nothing_yet)
+    val thisWeek = stringResource(R.string.reading_this_week)
+    val long = if (c.d.weekMinutes > 0) BoardData.duration(c.d.weekMinutes) else nothingYet
+    val short = if (c.d.weekMinutes > 0) BoardData.shortDuration(c.d.weekMinutes) else nothingYet
     val besideH = hh - 2 * pad - bx.lh1(13) - bx.px(8) - bx.lh1(11) - bx.px(4)
     fun textW(t: String) = measurer.measure(AnnotatedString(t), boardStyle(bx, 13.0, bold = true), maxLines = 1, softWrap = false).size.width
-    val labelW = measurer.measure(AnnotatedString("This week"), boardStyle(bx, 11.0, bold = true), maxLines = 1, softWrap = false).size.width
+    val labelW = measurer.measure(AnnotatedString(thisWeek), boardStyle(bx, 11.0, bold = true), maxLines = 1, softWrap = false).size.width
     val total = if (labelW + bx.px(4) + textW(long) <= iw) long else if (labelW + bx.px(4) + textW(short) <= iw) short else null
     val chartH = if (total != null) besideH else hh - 2 * pad - 2 * bx.lh1(13) - bx.px(6) - bx.px(4) - bx.lh1(11)
     val ink = BoardColour.ink("week", Ink.black)
     val mid = BoardColour.mid("week", Ink.g8)
     val trk = BoardColour.track("week", Ink.gc)
     WPad(w, hh, pad) {
-        BHead(iw, "This week", if (total != null) ({ BText(total, 13.0, bold = true) }) else null, rightW = total?.let { textW(it) } ?: 0)
+        BHead(iw, thisWeek, if (total != null) ({ BText(total, 13.0, bold = true) }) else null, rightW = total?.let { textW(it) } ?: 0)
         if (total == null) BText(short, 13.0, bold = true, w = iw)
         VGap(if (total != null) bx.px(8) else bx.px(6))
         Row(Modifier.width(bx.d(iw)).height(bx.d(chartH - base)), horizontalArrangement = Arrangement.spacedBy(bx.d(gap)), verticalAlignment = Alignment.Bottom) {
@@ -270,13 +279,14 @@ fun GoalPaceWidget(c: BoardCtx, w: Int, hh: Int) {
     val goal = c.d.data.goalBooks
     val done = c.d.finishedYear
     val year = c.d.today.year
-    val title = "$year goal"
+    val title = stringResource(R.string.reading_goal_title, year)
     if (goal <= 0) {
-        val f = fitTitle(measurer, bx, "Set a reading goal to track your pace.", false, false, iw, listOf(13.0, 12.0, 11.0), 4, hh - 2 * pad - bx.lh1(13) - bx.px(6))
+        val setGoal = stringResource(R.string.reading_set_goal)
+        val f = fitTitle(measurer, bx, setGoal, false, false, iw, listOf(13.0, 12.0, 11.0), 4, hh - 2 * pad - bx.lh1(13) - bx.px(6))
         WPad(w, hh, pad) {
             BHead(iw, title, { Ic("target", 16, BoardColour.ink("goalpace", Ink.black), iconSw(2.25f)) })
             VGap(bx.px(6))
-            BText("Set a reading goal to track your pace.", f.s, color = Ink.g4, lines = max(1, f.lines), w = iw)
+            BText(setGoal, f.s, color = Ink.g4, lines = max(1, f.lines), w = iw)
         }
         return
     }
@@ -284,18 +294,20 @@ fun GoalPaceWidget(c: BoardCtx, w: Int, hh: Int) {
     val projected = (done * 365.0 / max(1, c.d.dayOfYear) + 0.5).toInt()
     val met = done >= goal
     val statuses = when {
-        done == 0 -> listOf("First book starts it", "Starting out", "New")
-        met -> listOf("Goal met · on pace for $projected", "on pace for $projected", "Goal met")
-        done >= expected -> (floor(done - expected + 0.5).toInt()).let { listOf("$it ahead of pace", "$it ahead") }
-        else -> (floor(expected - done + 0.5).toInt()).let { listOf("$it behind pace", "$it behind") }
+        done == 0 -> listOf(stringResource(R.string.reading_goal_first_book), stringResource(R.string.reading_goal_starting), stringResource(R.string.reading_goal_new))
+        met -> listOf(stringResource(R.string.reading_goal_met_on_pace, projected), stringResource(R.string.reading_goal_on_pace_for, projected), stringResource(R.string.reading_goal_met))
+        done >= expected -> (floor(done - expected + 0.5).toInt()).let { listOf(stringResource(R.string.reading_goal_ahead_pace, it), stringResource(R.string.reading_goal_ahead, it)) }
+        else -> (floor(expected - done + 0.5).toInt()).let { listOf(stringResource(R.string.reading_goal_behind_pace, it), stringResource(R.string.reading_goal_behind, it)) }
     }
+    val ofBooks = pluralStringResource(R.plurals.reading_of_goal_books, goal, goal)
+    val ofGoal = stringResource(R.string.reading_of_goal, goal)
     val behind = !met && done > 0 && done < expected
     val ink = BoardColour.ink("goalpace", Ink.black)
     fun wOf(t: String, s: Double, b: Boolean = false) = measurer.measure(AnnotatedString(t), boardStyle(bx, s, bold = b), maxLines = 1, softWrap = false).size.width
     val numW = wOf("$done", 24.0, true)
     var pickedStatus: String? = null
-    var pickedUnit = " of $goal"
-    outer@ for (st in statuses) for (unit in listOf(" of $goal books", " of $goal")) {
+    var pickedUnit = " $ofGoal"
+    outer@ for (st in statuses) for (unit in listOf(" $ofBooks", " $ofGoal")) {
         if (numW + wOf(unit, 13.0) + bx.px(4) + wOf(st, 12.0, behind) <= iw) { pickedStatus = st; pickedUnit = unit; break@outer }
     }
     WPad(w, hh, pad) {
@@ -311,7 +323,7 @@ fun GoalPaceWidget(c: BoardCtx, w: Int, hh: Int) {
             GoalBar(iw, bx, done, goal, projected, met)
         } else {
             val valS = BoardData.fillSize(hh - 2 * pad - bx.lh1(13) - bx.lh1(12) - bx.px(10), bx.scale.dp, 20, 32)
-            BRuns(listOf(Run("$done", b = true, s = valS.toDouble()), Run(" of $goal", color = Ink.g4)), 13.0, w = iw)
+            BRuns(listOf(Run("$done", b = true, s = valS.toDouble()), Run(" $ofGoal", color = Ink.g4)), 13.0, w = iw)
             VGap(bx.px(5))
             BText(statuses.last(), 12.0, bold = behind, color = if (behind) Ink.black else Ink.g4, w = iw)
         }
@@ -345,10 +357,14 @@ fun TogglesWidget(c: BoardCtx, w: Int, hh: Int) {
     val onCol = BoardColour.ink("toggles", Ink.black)
     // Wi-Fi, Light, Night and Sync, as the plugin draws them with a frontlight.
     val items = listOf(Triple("wifi", c.online, "wifi"), Triple("sun", false, "light"), Triple("moon", false, "night"), Triple("refresh-cw", false, "sync"))
-    val labels = mapOf("wifi" to "Wi-Fi", "light" to "Light", "night" to "Night", "sync" to "Sync")
+    val labels = mapOf(
+        "wifi" to stringResource(R.string.reading_wifi), "light" to stringResource(R.string.reading_light),
+        "night" to stringResource(R.string.reading_night), "sync" to stringResource(R.string.reading_sync)
+    )
     @Composable fun btn(size: Int, it: Triple<String, Boolean, String>) {
         val on = it.second
-        BCircle(size, bg = if (on) onCol else Ink.white, border = if (on) 0 else max(1, bx.px(1.5)), modifier = Modifier.semantics { contentDescription = "Toggle " + labels.getValue(it.third) }.tapOrHold({ c.onToggle(it.third) })) {
+        val cd = stringResource(R.string.reading_toggle_cd, labels.getValue(it.third))
+        BCircle(size, bg = if (on) onCol else Ink.white, border = if (on) 0 else max(1, bx.px(1.5)), modifier = Modifier.semantics { contentDescription = cd }.tapOrHold({ c.onToggle(it.third) })) {
             IcPx(it.first, floor(size * 0.46 + 0.5).toInt(), if (on) Ink.white else Ink.black, 2.25f)
         }
     }
@@ -393,9 +409,10 @@ fun AlsoWidget(c: BoardCtx, w: Int, hh: Int) {
     val trk = BoardColour.track("also", Ink.gc)
     val measurer = rememberMeasurer()
     WPad(w, hh, pad) {
-        BHead(iw, "Also reading", { BHeadAction("All ${c.d.data.continueReading.size}") { c.onLink("in-progress") } }, rightW = headActionW(bx, measurer, "All ${c.d.data.continueReading.size}"))
+        val allText = stringResource(R.string.reading_all_count, c.d.data.continueReading.size)
+        BHead(iw, stringResource(R.string.reading_also_reading), { BHeadAction(allText) { c.onLink("in-progress") } }, rightW = headActionW(bx, measurer, allText))
         VGap(bx.px(6))
-        if (n == 0) BText("Books you start show up here.", 13.0, color = Ink.g4, w = iw, lines = 3)
+        if (n == 0) BText(stringResource(R.string.reading_also_empty), 13.0, color = Ink.g4, w = iw, lines = 3)
         for (i in 0 until n) {
             val b = books[i]
             if (i > 0) BRect(iw, thin(bx), Ink.gc)
@@ -431,7 +448,7 @@ fun HighlightWidget(c: BoardCtx, w: Int, hh: Int) {
     val iw = w - 2 * pad
     val deep = BoardColour.art("highlight", Color.Black, "deep")
     if (hl == null) {
-        val str = "Your highlights come back here, one a day."
+        val str = stringResource(R.string.reading_highlights_empty)
         val room = hh - 2 * pad - bx.px(20) - bx.px(8)
         val f = fitTitle(measurer, bx, str, false, true, iw, listOf(15.0, 14.0, 13.0, 12.0), 4, room)
         WPad(w, hh, pad) {
@@ -466,7 +483,7 @@ fun HighlightWidget(c: BoardCtx, w: Int, hh: Int) {
                 Row(Modifier.width(bx.d(iw3)).height(bx.d(bx.lh1(12))), verticalAlignment = Alignment.CenterVertically) {
                     Ic("quote", 14, deep, 1f, fill = true)
                     HGap(bx.px(6))
-                    BText("Highlight of the day", 12.0, bold = true, color = Ink.g4)
+                    BText(stringResource(R.string.reading_highlight_of_day), 12.0, bold = true, color = Ink.g4)
                 }
                 VGap(bx.px(6))
                 BText(hl.quote, qs, italic = true, serif = true, color = Ink.g1, lines = lines0, w = iw3)
@@ -489,15 +506,18 @@ fun HighlightWidget(c: BoardCtx, w: Int, hh: Int) {
 
 // ============================================================ Shelf
 private val SHELF_TITLES = mapOf(
-    "want-to-read" to "Want to read", "up-next-in-series" to "Up next in series", "random" to "Discover", "recently-added" to "Recently added",
-    "in-progress" to "In progress", "pick-back-up" to "Pick back up", "finished" to "Finished this year"
+    "want-to-read" to R.string.reading_shelf_want_to_read, "up-next-in-series" to R.string.reading_shelf_up_next,
+    "random" to R.string.reading_shelf_discover, "recently-added" to R.string.reading_shelf_recently_added,
+    "in-progress" to R.string.reading_shelf_in_progress, "pick-back-up" to R.string.reading_shelf_pick_back_up,
+    "finished" to R.string.reading_shelf_finished_this_year
 )
 private val SHELF_EMPTY = mapOf(
-    "want-to-read" to "Books you have not started wait here.", "pick-back-up" to "Books you put down a while ago show up here.",
-    "finished" to "Books you finish this year gather here.", "up-next-in-series" to "The next book of a series you started shows up here."
+    "want-to-read" to R.string.reading_shelf_empty_want, "pick-back-up" to R.string.reading_shelf_empty_pick_back_up,
+    "finished" to R.string.reading_shelf_empty_finished, "up-next-in-series" to R.string.reading_shelf_empty_up_next
 )
 
-fun shelfTitle(kind: String?, year: Int): String = if (kind == "finished") "Finished in $year" else SHELF_TITLES[kind] ?: "Shelf"
+fun shelfTitle(kind: String?, year: Int): String =
+    if (kind == "finished") RS.get(R.string.reading_shelf_finished_in, year) else RS.get(SHELF_TITLES[kind] ?: R.string.reading_shelf_default)
 
 @Composable
 fun ShelfWidget(c: BoardCtx, w: Int, hh: Int, tile: Tile, cols: Int) {
@@ -523,18 +543,20 @@ fun ShelfWidget(c: BoardCtx, w: Int, hh: Int, tile: Tile, cols: Int) {
     val gap = if (n > 1) (iw - n * coverW) / (n - 1) else 0
     val title = shelfTitle(kind, c.d.today.year)
     val iconCol = BoardColour.art(tile.key, Color.Black)
+    val shuffleCd = stringResource(R.string.reading_shuffle_picks)
+    val seeAll = stringResource(R.string.reading_see_all)
     val right: (@Composable () -> Unit)? = when {
-        kind == "random" -> ({ Box(Modifier.width(bx.dd(36)).height(bx.d(bx.lh1(13))).semantics { contentDescription = "Shuffle picks" }.tapOrHold({ c.onShuffle() }), contentAlignment = Alignment.CenterEnd) { Ic("shuffle", 17, iconCol, iconSw(2.25f)) } })
+        kind == "random" -> ({ Box(Modifier.width(bx.dd(36)).height(bx.d(bx.lh1(13))).semantics { contentDescription = shuffleCd }.tapOrHold({ c.onShuffle() }), contentAlignment = Alignment.CenterEnd) { Ic("shuffle", 17, iconCol, iconSw(2.25f)) } })
         books.isEmpty() -> null
         kind == "finished" -> ({ BHeadAction("${c.d.finishedYear}") { c.onLink("shelf:finished") } })
         kind == "want-to-read" -> null
-        else -> ({ BHeadAction("See all") { c.onLink("shelf:$kind") } })
+        else -> ({ BHeadAction(seeAll) { c.onLink("shelf:$kind") } })
     }
     WPad(w, hh, pad) {
-        BHead(iw, title, right, rightW = if (kind == "random") bx.px(36) else if (kind == "want-to-read" || books.isEmpty()) 0 else headActionW(bx, rememberMeasurer(), if (kind == "finished") "${c.d.finishedYear}" else "See all"))
+        BHead(iw, title, right, rightW = if (kind == "random") bx.px(36) else if (kind == "want-to-read" || books.isEmpty()) 0 else headActionW(bx, rememberMeasurer(), if (kind == "finished") "${c.d.finishedYear}" else seeAll))
         if (books.isEmpty()) {
             VGap(bx.px(8))
-            BText(SHELF_EMPTY[kind] ?: "Nothing here yet.", 13.0, color = Ink.g4, lines = 3, w = iw)
+            BText(stringResource(SHELF_EMPTY[kind] ?: R.string.reading_nothing_here), 13.0, color = Ink.g4, lines = 3, w = iw)
         } else {
             VGap(bx.px(10))
             Row(horizontalArrangement = Arrangement.spacedBy(bx.d(gap)), verticalAlignment = Alignment.Top) {
@@ -551,16 +573,16 @@ fun ShelfWidget(c: BoardCtx, w: Int, hh: Int, tile: Tile, cols: Int) {
 }
 
 // ============================================================ Links
-private data class LinkSpec(val icon: String, val label: String, val unit: (Int) -> String)
+private data class LinkSpec(val icon: String, @androidx.annotation.StringRes val label: Int, @androidx.annotation.PluralsRes val unit: Int?)
 
 private val LINKS = mapOf(
-    "library" to LinkSpec("book-copy", "Library") { "books" },
-    "series" to LinkSpec("layers-2", "Series") { "series" },
-    "authors" to LinkSpec("feather", "Authors") { "authors" },
-    "collections" to LinkSpec("folder-open", "Collections") { if (it == 1) "collection" else "collections" },
-    "scopes" to LinkSpec("circle-check", "Finished") { "books" },
-    "device" to LinkSpec("tablet", "On device") { if (it == 1) "book here" else "books here" },
-    "search" to LinkSpec("search", "Search") { "" }
+    "library" to LinkSpec("book-copy", R.string.reading_link_library, R.plurals.reading_unit_books),
+    "series" to LinkSpec("layers-2", R.string.reading_link_series, R.plurals.reading_unit_series),
+    "authors" to LinkSpec("feather", R.string.reading_link_authors, R.plurals.reading_unit_authors),
+    "collections" to LinkSpec("folder-open", R.string.reading_link_collections, R.plurals.reading_unit_collections),
+    "scopes" to LinkSpec("circle-check", R.string.reading_link_finished, R.plurals.reading_unit_books),
+    "device" to LinkSpec("tablet", R.string.reading_link_device, R.plurals.reading_unit_books_here),
+    "search" to LinkSpec("search", R.string.reading_link_search, null)
 )
 
 private fun fanWidth(coverH: Int, count: Int): Int {
@@ -598,11 +620,12 @@ fun LinkWidget(c: BoardCtx, w: Int, hh: Int, tile: Tile) {
         "library" -> c.d.data.totalBooks; "series" -> c.d.data.seriesCount; "authors" -> c.d.data.authorCount
         "collections" -> c.d.folders.size; "scopes" -> c.d.finished.size; "device" -> c.d.data.totalBooks; else -> 0
     }
-    val unit = spec.unit(n)
+    val unit = spec.unit?.let { pluralStringResource(it, n) }.orEmpty()
+    val label = stringResource(spec.label)
     val iconCol = BoardColour.icon(tile.key)
     fun wOf(t: String, s: Double, b: Boolean = false) = measurer.measure(AnnotatedString(t), boardStyle(bx, s, bold = b), maxLines = 1, softWrap = false).size.width
     // The name stays whole: the chevron gives way first, then the icon, then the name steps down a size or two.
-    val need0 = wOf(spec.label, 13.0, true)
+    val need0 = wOf(label, 13.0, true)
     val iconW = bx.px(15) + bx.px(5)
     var chevron = w >= bx.px(150)
     val cwid = if (chevron) bx.px(14) + bx.px(5) else 0
@@ -610,13 +633,13 @@ fun LinkWidget(c: BoardCtx, w: Int, hh: Int, tile: Tile) {
     val withIcon = need0 <= iw - iconW
     val labW = iw - (if (withIcon) iconW else 0) - (if (chevron) cwid else 0)
     var size = 13
-    while (wOf(spec.label, size.toDouble(), true) > labW && size > 11) size--
+    while (wOf(label, size.toDouble(), true) > labW && size > 11) size--
     val room = ih - bx.lh1(13)
     val valS = BoardData.fillSize(room - bx.lh1(11) - bx.px(4), bx.scale.dp, 18, 30)
     @Composable fun head() {
         Row(Modifier.width(bx.d(iw)).height(bx.d(bx.lh1(13))), verticalAlignment = Alignment.CenterVertically) {
             if (withIcon) { Ic(spec.icon, 15, iconCol, iconSw(2.25f)); HGap(bx.px(5)) }
-            Box(Modifier.weight(1f)) { BText(spec.label, size.toDouble(), bold = true, w = labW) }
+            Box(Modifier.weight(1f)) { BText(label, size.toDouble(), bold = true, w = labW) }
             if (chevron) { HGap(bx.px(5)); Ic("chevron-right", 14, Ink.g6, 2.5f) }
         }
     }
@@ -633,7 +656,7 @@ fun LinkWidget(c: BoardCtx, w: Int, hh: Int, tile: Tile) {
             "device" -> {
                 count()
                 c.storage?.let { st ->
-                    val label2 = "%.1f GB free".format(java.util.Locale.ENGLISH, st.freeGb).replace(".0 GB", " GB")
+                    val label2 = stringResource(R.string.reading_gb_free, gigabytes(st.freeGb))
                     val used = floor(100 * (st.totalGb - st.freeGb) / st.totalGb + 0.5)
                     VGap(bx.px(5))
                     val l2w = wOf(label2, 11.0)
@@ -653,7 +676,7 @@ fun LinkWidget(c: BoardCtx, w: Int, hh: Int, tile: Tile) {
                     HGap(bx.px(10))
                     IcPx("search", min(bx.px(14), fieldH - 2 * border), Ink.g4, 2.5f)
                     HGap(bx.px(6))
-                    BText("Title, author", 12.0, color = Ink.g4)
+                    BText(stringResource(R.string.reading_title_author_hint), 12.0, color = Ink.g4)
                 }
             }
             "authors" -> {
@@ -696,27 +719,34 @@ fun SyncWidget(c: BoardCtx, w: Int, hh: Int) {
     val pad = bx.px(12)
     val iw = w - 2 * pad
     val ink = BoardColour.icon("sync")
-    val whenText = c.lastSyncMs?.let { relative(c.nowMs - it) } ?: "not yet"
-    val title = if (c.lastSyncMs != null) "Synced" else "Sync"
+    val whenText = c.lastSyncMs?.let { relative(c.nowMs - it) } ?: stringResource(R.string.reading_not_yet)
+    val title = stringResource(if (c.lastSyncMs != null) R.string.reading_synced else R.string.reading_sync)
     WPad(w, hh, pad) {
         BHead(iw, title, { Ic("cloud-check", 17, ink, iconSw(2.25f)) })
         Flex()
         BText(whenText, 16.0, bold = true, w = iw)
         VGap(bx.px(6))
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Ic("refresh-cw", 14, ink, iconSw(2.5f)); HGap(bx.px(5)); BText("Sync now", 12.0, bold = true)
+            Ic("refresh-cw", 14, ink, iconSw(2.5f)); HGap(bx.px(5)); BText(stringResource(R.string.reading_sync_now), 12.0, bold = true)
         }
     }
 }
 
+@Composable
 private fun relative(deltaMs: Long): String {
     val s = deltaMs / 1000
     return when {
-        s < 60 -> "just now"
-        s < 3600 -> "${s / 60} min ago"
-        s < 86400 -> "${s / 3600} h ago"
-        else -> "${s / 86400} d ago"
+        s < 60 -> stringResource(R.string.reading_just_now)
+        s < 3600 -> stringResource(R.string.reading_min_ago, (s / 60).toInt())
+        s < 86400 -> stringResource(R.string.reading_h_ago, (s / 3600).toInt())
+        else -> stringResource(R.string.reading_d_ago, (s / 86400).toInt())
     }
+}
+
+/** Free storage as "12.3" ("12,3" in languages that write a decimal comma); a whole number shows no decimal. */
+internal fun gigabytes(gb: Double): String {
+    val text = "%.1f".format(RS.locale, gb)
+    return if (text.length >= 3 && text.endsWith("0") && !text[text.length - 2].isDigit()) text.dropLast(2) else text
 }
 
 // ============================================================ Clock (device)

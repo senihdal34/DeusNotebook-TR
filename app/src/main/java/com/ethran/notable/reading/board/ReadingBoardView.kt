@@ -45,9 +45,14 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import com.ethran.notable.R
 import com.ethran.notable.reading.RBook
+import com.ethran.notable.reading.RS
+import com.ethran.notable.reading.ReadingDates
 import com.ethran.notable.reading.ReadingGoal
 import com.ethran.notable.reading.ReadingInsights
 import com.ethran.notable.reading.ReadingSearch
@@ -58,15 +63,14 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-import java.time.format.TextStyle
-import java.util.Locale
 import kotlin.math.floor
 import kotlin.math.max
 import kotlin.math.min
 
-private enum class Sub(val title: String) {
-    Library("Library"), Authors("Authors"), Series("Series"), OnDevice("On device"), Collections("Collections"), Finished("Finished"),
-    InProgress("Also reading"), Shelf("")
+private enum class Sub(@androidx.annotation.StringRes val title: Int) {
+    Library(R.string.reading_link_library), Authors(R.string.reading_link_authors), Series(R.string.reading_link_series),
+    OnDevice(R.string.reading_link_device), Collections(R.string.reading_link_collections), Finished(R.string.reading_link_finished),
+    InProgress(R.string.reading_also_reading), Shelf(R.string.reading_shelf_default)
 }
 
 /** The device's own state the header and some boxes show: Wi-Fi, battery, clock and storage. */
@@ -88,9 +92,9 @@ private fun rememberDevice(refreshKey: Any): Device {
             Storage(st.availableBytes / 1e9, st.totalBytes / 1e9)
         }.getOrNull()
         Device(
-            online, battery, now.format(DateTimeFormatter.ofPattern("HH:mm")), now.dayOfWeek.getDisplayName(TextStyle.FULL, Locale.ENGLISH),
-            "${now.dayOfMonth} ${now.month.getDisplayName(TextStyle.FULL, Locale.ENGLISH)}",
-            "${now.dayOfWeek.getDisplayName(TextStyle.FULL, Locale.ENGLISH)}, ${now.dayOfMonth} ${now.month.getDisplayName(TextStyle.FULL, Locale.ENGLISH)}", storage
+            online, battery, now.format(DateTimeFormatter.ofPattern("HH:mm")), ReadingDates.weekday(now.dayOfWeek, full = true),
+            ReadingDates.dayMonth(now.toLocalDate(), fullMonth = true),
+            ReadingDates.weekdayDayMonth(now.toLocalDate(), fullWeekday = true, fullMonth = true), storage
         )
     }
 }
@@ -193,7 +197,7 @@ fun ReadingBoardView(ui: ReadingUi, onOpen: (RBook) -> Unit, modifier: Modifier 
                     searching -> Scrolling(g, heightPx) { SearchScreen(query, { query = it }, data.books, ctx) { searching = false; query = "" } }
                     sub != null -> Scrolling(g, heightPx) { SubList(sub!!, shelfKind, bd, ctx) { sub = null } }
                     !ui.sourceAvailable && ui.loaded -> BText(
-                        "NeoReader's library could not be read, so there is nothing to show yet.", 14.0, italic = true, serif = true, color = Ink.g4, lines = 3, w = g.width
+                        stringResource(R.string.reading_source_unavailable), 14.0, italic = true, serif = true, color = Ink.g4, lines = 3, w = g.width
                     )
                     else -> {
                         val tiles = pages[current].tiles
@@ -311,6 +315,8 @@ private fun BoardHeader(w: Int, d: Device, c: BoardCtx, onSearch: () -> Unit, on
     val box = bx.px(44)
     val tapPad = (box - bx.px(24)) / 2
     val greeting = ReadingText.greeting(java.time.LocalTime.now().hour, c.d.data.name)
+    val searchCd = stringResource(R.string.reading_search_books_cd)
+    val goalCd = stringResource(R.string.reading_goal_cd)
     val statusW = bx.px(15) + bx.px(21) + bx.px(2) + bx.px(4) * 2 + 3 * bx.px(7) + bx.px(60) + bx.px(40)
     val tw = w - statusW - bx.px(6) - 2 * box + tapPad
     val greetS = fitSize(measurer, bx, greeting, true, false, tw, 22, 18)
@@ -321,17 +327,19 @@ private fun BoardHeader(w: Int, d: Device, c: BoardCtx, onSearch: () -> Unit, on
         }
         StatusCluster(d)
         HGap(bx.px(6))
-        Box(Modifier.size(bx.d(box)).semantics { contentDescription = "Search books" }.tapOrHold(onSearch), contentAlignment = Alignment.Center) { Ic("search", 23, Ink.black, 2f) }
-        Box(Modifier.size(bx.d(box)).semantics { contentDescription = "Reading goal" }.tapOrHold(onMenu), contentAlignment = Alignment.Center) { Ic("menu", 23, Ink.black, 2f) }
+        Box(Modifier.size(bx.d(box)).semantics { contentDescription = searchCd }.tapOrHold(onSearch), contentAlignment = Alignment.Center) { Ic("search", 23, Ink.black, 2f) }
+        Box(Modifier.size(bx.d(box)).semantics { contentDescription = goalCd }.tapOrHold(onMenu), contentAlignment = Alignment.Center) { Ic("menu", 23, Ink.black, 2f) }
     }
 }
 
 @Composable
 private fun BoardFooter(w: Int, h: Int, names: List<String>, page: Int, onPage: (Int) -> Unit) {
     val bx = LocalBx.current
+    val nextCd = stringResource(R.string.reading_next_page_cd)
+    val previousCd = stringResource(R.string.reading_previous_page_cd)
     @Composable fun chev(name: String, enabled: Boolean, to: Int) {
         Box(
-            Modifier.size(bx.d(bx.px(44)), bx.d(h)).semantics { contentDescription = if (to > page) "Next page" else "Previous page" }.tapOrHold({ if (enabled) onPage(to) }),
+            Modifier.size(bx.d(bx.px(44)), bx.d(h)).semantics { contentDescription = if (to > page) nextCd else previousCd }.tapOrHold({ if (enabled) onPage(to) }),
             contentAlignment = Alignment.Center
         ) { Ic(name, 20, if (enabled) Ink.black else Ink.gb, 2.5f) }
     }
@@ -341,7 +349,8 @@ private fun BoardFooter(w: Int, h: Int, names: List<String>, page: Int, onPage: 
         // Each dot has a tap area as tall as the footer and as wide as the dot plus its gap, so a finger can hit it.
         Row(verticalAlignment = Alignment.CenterVertically) {
             names.indices.forEach { i ->
-                Box(Modifier.size(bx.d(bx.px(13)), bx.d(h)).semantics { contentDescription = "Page ${names[i]}" }.tapOrHold({ onPage(i) }), contentAlignment = Alignment.Center) {
+                val pageCd = stringResource(R.string.reading_page_cd, names[i])
+                Box(Modifier.size(bx.d(bx.px(13)), bx.d(h)).semantics { contentDescription = pageCd }.tapOrHold({ onPage(i) }), contentAlignment = Alignment.Center) {
                     BDot(bx.px(7), i == page, Ink.black, Ink.g8)
                 }
             }
@@ -357,8 +366,9 @@ private fun BoardFooter(w: Int, h: Int, names: List<String>, page: Int, onPage: 
 @Composable
 internal fun ScreenTitle(title: String, onBack: () -> Unit, right: (@Composable () -> Unit)? = null) {
     val bx = LocalBx.current
+    val backCd = stringResource(R.string.reading_back_cd)
     Row(Modifier.fillMaxWidth().height(bx.dd(48)), verticalAlignment = Alignment.CenterVertically) {
-        Box(Modifier.size(bx.dd(44)).semantics { contentDescription = "Back" }.tapOrHold(onBack), contentAlignment = Alignment.CenterStart) { Ic("chevron-left", 24, Ink.black, 2.5f) }
+        Box(Modifier.size(bx.dd(44)).semantics { contentDescription = backCd }.tapOrHold(onBack), contentAlignment = Alignment.CenterStart) { Ic("chevron-left", 24, Ink.black, 2.5f) }
         Box(Modifier.weight(1f)) { BText(title, 22.0, bold = true) }
         right?.invoke()
     }
@@ -376,7 +386,7 @@ private fun BookRow(b: RBook, c: BoardCtx) {
             if (b.author.isNotBlank()) BText(b.author, 12.0, color = Ink.g4)
         }
         HGap(bx.px(10))
-        BText(if (b.finishedAt != null) "Done" else if (b.progress > 0) BoardData.pctLabel(b.progress) else "", 12.0, bold = true)
+        BText(if (b.finishedAt != null) stringResource(R.string.reading_done) else if (b.progress > 0) BoardData.pctLabel(b.progress) else "", 12.0, bold = true)
     }
     BRect(1, max(1, bx.px(0.75)), Ink.gc, modifier = Modifier.fillMaxWidth())
 }
@@ -385,17 +395,18 @@ private fun BookRow(b: RBook, c: BoardCtx) {
 private fun SubList(sub: Sub, shelfKind: String, bd: BoardData, c: BoardCtx, back: () -> Unit) {
     val bx = LocalBx.current
     val books = bd.data.books
+    val unknown = stringResource(R.string.reading_unknown)
     val groups: List<Pair<String?, List<RBook>>> = when (sub) {
         Sub.Library, Sub.OnDevice -> listOf(null to books.sortedBy { it.title.lowercase() })
-        Sub.Authors -> books.groupBy { it.author.ifBlank { "Unknown" } }.toList().sortedBy { it.first.lowercase() }
+        Sub.Authors -> books.groupBy { it.author.ifBlank { unknown } }.toList().sortedBy { it.first.lowercase() }
         Sub.Series -> books.filter { it.series != null }.groupBy { it.series!! }.toList().sortedBy { it.first.lowercase() }
         Sub.Collections -> books.groupBy { it.path.substringBeforeLast('/', "").substringAfterLast('/') }.toList().sortedBy { it.first.lowercase() }
         Sub.Finished -> listOf(null to books.filter { it.finishedAt != null }.sortedByDescending { it.finishedAt })
         Sub.InProgress -> listOf(null to bd.data.continueReading)
         Sub.Shelf -> listOf(null to bd.fullShelf(shelfKind))
     }
-    ScreenTitle(if (sub == Sub.Shelf) shelfTitle(shelfKind, bd.today.year) else sub.title, back)
-    if (groups.all { it.second.isEmpty() }) BText("Nothing here yet.", 14.0, color = Ink.g4)
+    ScreenTitle(if (sub == Sub.Shelf) shelfTitle(shelfKind, bd.today.year) else stringResource(sub.title), back)
+    if (groups.all { it.second.isEmpty() }) BText(stringResource(R.string.reading_nothing_here), 14.0, color = Ink.g4)
     groups.forEach { (header, list) ->
         if (header != null) {
             Row(Modifier.padding(top = bx.dd(10), bottom = bx.dd(2))) { BText(header, 13.0, bold = true); HGap(bx.px(6)); BText("${list.size}", 13.0, color = Ink.g4) }
@@ -407,7 +418,7 @@ private fun SubList(sub: Sub, shelfKind: String, bd: BoardData, c: BoardCtx, bac
 @Composable
 private fun SearchScreen(query: String, onQuery: (String) -> Unit, books: List<RBook>, c: BoardCtx, back: () -> Unit) {
     val bx = LocalBx.current
-    ScreenTitle("Search", back)
+    ScreenTitle(stringResource(R.string.reading_link_search), back)
     val focus = remember { androidx.compose.ui.focus.FocusRequester() }
     LaunchedEffect(Unit) { runCatching { focus.requestFocus() } }
     val shape = RoundedCornerShape(bx.dd(22))
@@ -418,7 +429,7 @@ private fun SearchScreen(query: String, onQuery: (String) -> Unit, books: List<R
         Ic("search", 16, Ink.g4, 2.5f)
         HGap(bx.px(8))
         Box(Modifier.weight(1f)) {
-            if (query.isEmpty()) BText("Title, author or series", 14.0, color = Ink.g4)
+            if (query.isEmpty()) BText(stringResource(R.string.reading_search_hint), 14.0, color = Ink.g4)
             androidx.compose.foundation.text.BasicTextField(
                 value = query, onValueChange = onQuery, singleLine = true, textStyle = boardStyle(bx, 14.0),
                 cursorBrush = androidx.compose.ui.graphics.SolidColor(Ink.black), modifier = Modifier.fillMaxWidth().focusRequester(focus)
@@ -429,8 +440,8 @@ private fun SearchScreen(query: String, onQuery: (String) -> Unit, books: List<R
     VGap(bx.px(8))
     val found = remember(books, query) { ReadingSearch.filter(books, query) }
     if (query.isNotBlank()) {
-        BText("${found.size} ${if (found.size == 1) "result" else "results"}", 12.0, color = Ink.g4)
-        if (found.isEmpty()) BText("No book matches “${query.trim()}”.", 14.0, italic = true, serif = true, color = Ink.g4)
+        BText(pluralStringResource(R.plurals.reading_results, found.size, found.size), 12.0, color = Ink.g4)
+        if (found.isEmpty()) BText(stringResource(R.string.reading_no_match, query.trim()), 14.0, italic = true, serif = true, color = Ink.g4)
         found.forEach { BookRow(it, c) }
     }
 }
@@ -438,20 +449,22 @@ private fun SearchScreen(query: String, onQuery: (String) -> Unit, books: List<R
 @Composable
 private fun GoalScreen(goal: Int, done: Int, year: Int, onSet: ((Int) -> Unit)?, back: () -> Unit) {
     val bx = LocalBx.current
-    ScreenTitle("$year goal", back)
-    BText("$done of $goal books finished", 14.0, color = Ink.g4)
+    ScreenTitle(stringResource(R.string.reading_goal_title, year), back)
+    BText(stringResource(R.string.reading_goal_books_finished, done, goal), 14.0, color = Ink.g4)
+    val fewerCd = stringResource(R.string.reading_fewer_books_cd)
+    val moreCd = stringResource(R.string.reading_more_books_cd)
     VGap(bx.px(16))
     if (onSet != null) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(bx.dd(14))) {
             val enabledMinus = goal > ReadingGoal.MIN; val enabledPlus = goal < ReadingGoal.MAX
-            BCircle(bx.px(44), bg = Ink.white, border = max(1, bx.px(1.5)), borderCol = if (enabledMinus) Ink.black else Ink.gb, modifier = Modifier.semantics { contentDescription = "Fewer books" }.tapOrHold({ if (enabledMinus) onSet(ReadingGoal.step(goal, -1)) })) {
+            BCircle(bx.px(44), bg = Ink.white, border = max(1, bx.px(1.5)), borderCol = if (enabledMinus) Ink.black else Ink.gb, modifier = Modifier.semantics { contentDescription = fewerCd }.tapOrHold({ if (enabledMinus) onSet(ReadingGoal.step(goal, -1)) })) {
                 Ic("minus", 22, if (enabledMinus) Ink.black else Ink.gb, 2.75f)
             }
             Box(Modifier.width(bx.dd(64)), contentAlignment = Alignment.Center) { BText("$goal", 28.0, bold = true) }
-            BCircle(bx.px(44), bg = Ink.white, border = max(1, bx.px(1.5)), borderCol = if (enabledPlus) Ink.black else Ink.gb, modifier = Modifier.semantics { contentDescription = "More books" }.tapOrHold({ if (enabledPlus) onSet(ReadingGoal.step(goal, 1)) })) {
+            BCircle(bx.px(44), bg = Ink.white, border = max(1, bx.px(1.5)), borderCol = if (enabledPlus) Ink.black else Ink.gb, modifier = Modifier.semantics { contentDescription = moreCd }.tapOrHold({ if (enabledPlus) onSet(ReadingGoal.step(goal, 1)) })) {
                 Ic("plus", 22, if (enabledPlus) Ink.black else Ink.gb, 2.75f)
             }
-            BText("books a year", 13.0, color = Ink.g4)
+            BText(stringResource(R.string.reading_books_a_year), 13.0, color = Ink.g4)
         }
     }
 }
@@ -459,7 +472,7 @@ private fun GoalScreen(goal: Int, done: Int, year: Int, onSet: ((Int) -> Unit)?,
 @Composable
 private fun BookDetailScreen(book: RBook, highlights: List<com.ethran.notable.reading.RHighlight>, c: BoardCtx, back: () -> Unit) {
     val bx = LocalBx.current
-    ScreenTitle("Book", back)
+    ScreenTitle(stringResource(R.string.reading_book), back)
     val coverH = bx.px(260); val coverW = (coverH * 2 / 3.0 + 0.5).toInt()
     Row(Modifier.fillMaxWidth()) {
         BCover(book, coverW, coverH, max(1, bx.px(1)), Ink.g6)
@@ -472,19 +485,19 @@ private fun BookDetailScreen(book: RBook, highlights: List<com.ethran.notable.re
             VGap(bx.px(14))
             BBar(coverW * 2, bx.px(6), book.progress, Ink.gc, Ink.black, bx.px(3))
             VGap(bx.px(6))
-            BText(if (book.finishedAt != null) "Finished" else "${BoardData.pctLabel(book.progress)} read", 13.0, color = Ink.g4)
+            BText(if (book.finishedAt != null) stringResource(R.string.reading_finished) else stringResource(R.string.reading_pct_read, BoardData.pctLabel(book.progress)), 13.0, color = Ink.g4)
             VGap(bx.px(12))
-            Fact("Pages", if (book.pages > 0) "${book.pages}" else "–")
-            Fact("Last read", ReadingText.lastRead(book.lastReadAt, c.d.data.now.takeIf { it > 0L } ?: System.currentTimeMillis()))
-            Fact("Time left", book.minutesLeft?.let { BoardData.duration(it) } ?: if (book.finishedAt != null) "Done" else "–")
+            Fact(stringResource(R.string.reading_pages), if (book.pages > 0) "${book.pages}" else "–")
+            Fact(stringResource(R.string.reading_last_read), ReadingText.lastRead(book.lastReadAt, c.d.data.now.takeIf { it > 0L } ?: System.currentTimeMillis()))
+            Fact(stringResource(R.string.reading_time_left_label), book.minutesLeft?.let { BoardData.duration(it) } ?: if (book.finishedAt != null) stringResource(R.string.reading_done) else "–")
             Flex()
-            Row { PillButton("Open in NeoReader", "book-open", dark = true) { c.onOpen(book) } }
+            Row { PillButton(stringResource(R.string.reading_open_in_neoreader), "book-open", dark = true) { c.onOpen(book) } }
         }
     }
     VGap(bx.px(16))
-    BText("Highlights · ${highlights.size}", 13.0, bold = true)
+    BText(stringResource(R.string.reading_highlights_count, highlights.size), 13.0, bold = true)
     VGap(bx.px(6))
-    if (highlights.isEmpty()) BText("No highlights in this book yet.", 14.0, italic = true, serif = true, color = Ink.g4)
+    if (highlights.isEmpty()) BText(stringResource(R.string.reading_no_highlights), 14.0, italic = true, serif = true, color = Ink.g4)
     highlights.forEach { h ->
         BText("“${h.quote}”", 15.0, italic = true, serif = true, color = Ink.g1, lines = 12, modifier = Modifier.padding(vertical = bx.dd(8)))
         BRect(1, max(1, bx.px(0.75)), Ink.gc, modifier = Modifier.fillMaxWidth())

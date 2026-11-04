@@ -11,6 +11,8 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class ReadingInsightsTest {
+    init { EnglishStrings.install() }   // the logic speaks the app language; the test reads the English file
+
     private val zone = ZoneId.of("Europe/Istanbul")
     private val today = LocalDate.of(2026, 10, 28) // a Wednesday
     private fun day(d: LocalDate) = d.toEpochDay()

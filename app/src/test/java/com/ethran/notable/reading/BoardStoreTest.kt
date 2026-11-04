@@ -8,6 +8,8 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class BoardStoreTest {
+    init { EnglishStrings.install() }   // the logic speaks the app language; the test reads the English file
+
     private fun pack(cols: Int, landscape: Boolean = false, page: Int) =
         BoardGrid.pack(BoardStore.starterPages(cols, landscape = landscape)[page].tiles.mapIndexed { i, t -> BoardGrid.Item("$i", t.cw, t.rh) }, cols)
 

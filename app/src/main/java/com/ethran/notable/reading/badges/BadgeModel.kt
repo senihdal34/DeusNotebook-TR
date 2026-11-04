@@ -1,8 +1,15 @@
 package com.ethran.notable.reading.badges
 
+import androidx.annotation.StringRes
+import com.ethran.notable.R
+import com.ethran.notable.reading.RS
+
 /** BookOrbit's four medal rarities (packages/types/src/achievement.ts). The rim of the medal and its colour follow it. */
-enum class Rarity(val label: String) {
-    Common("Common"), Rare("Rare"), Epic("Epic"), Legendary("Legendary");
+enum class Rarity(@StringRes val labelRes: Int) {
+    Common(R.string.badge_rarity_common), Rare(R.string.badge_rarity_rare), Epic(R.string.badge_rarity_epic), Legendary(R.string.badge_rarity_legendary);
+
+    /** The name in the app language. */
+    val label: String get() = RS.get(labelRes)
 
     /** The colour family the board draws the rarity in (lb_board_colour.lua RARITY: green, blue, violet, gold). */
     val family: String get() = when (this) { Common -> "green"; Rare -> "blue"; Epic -> "violet"; Legendary -> "gold" }
@@ -14,8 +21,12 @@ enum class Rarity(val label: String) {
 }
 
 /** BookOrbit's achievement categories, in the order its catalogue lists them. Devices has no local meaning and is not used. */
-enum class BadgeCategory(val label: String) {
-    Reading("Reading"), Library("Library"), Exploration("Exploration"), Dedication("Dedication")
+enum class BadgeCategory(@StringRes val labelRes: Int) {
+    Reading(R.string.badge_category_reading), Library(R.string.badge_category_library),
+    Exploration(R.string.badge_category_exploration), Dedication(R.string.badge_category_dedication);
+
+    /** The name in the app language. */
+    val label: String get() = RS.get(labelRes)
 }
 
 /**
@@ -24,9 +35,13 @@ enum class BadgeCategory(val label: String) {
  * is simply earned or not), [hidden] badges show as secrets until earned.
  */
 data class BadgeDef(
-    val key: String, val group: String?, val tier: Int?, val category: BadgeCategory, val name: String, val description: String,
+    val key: String, val group: String?, val tier: Int?, val category: BadgeCategory, @StringRes val nameRes: Int, @StringRes val descriptionRes: Int,
     val icon: String, val rarity: Rarity, val threshold: Int?, val hidden: Boolean, val sortOrder: Int
-)
+) {
+    /** The badge's name and text in the app language. */
+    val name: String get() = RS.get(nameRes)
+    val description: String get() = RS.get(descriptionRes)
+}
 
 /** What the data says about one badge right now: how far along ([progress], null when it has no count) and whether its rule holds. */
 data class Measure(val progress: Double?, val met: Boolean, val at: Long? = null)
@@ -39,8 +54,8 @@ data class Badge(
 ) {
     val key: String get() = def.key
     val secret: Boolean get() = def.hidden && !earned
-    val name: String get() = if (secret) SECRET_NAME else def.name
-    val description: String get() = if (secret) SECRET_TEXT else def.description
+    val name: String get() = if (secret) RS.get(R.string.badge_secret_name) else def.name
+    val description: String get() = if (secret) RS.get(R.string.badge_secret_text) else def.description
     val icon: String get() = if (secret) "lock" else def.icon
     val rarity: Rarity get() = if (secret) Rarity.Common else def.rarity
     val threshold: Int? get() = if (secret) null else def.threshold
@@ -53,11 +68,6 @@ data class Badge(
             if (earned || t <= 0) return null
             return (p / t).coerceIn(0.0, 1.0)
         }
-
-    companion object {
-        const val SECRET_NAME = "Secret badge"
-        const val SECRET_TEXT = "Keep reading to reveal this badge."
-    }
 }
 
 /** What the Next badge box and the list screen show. */

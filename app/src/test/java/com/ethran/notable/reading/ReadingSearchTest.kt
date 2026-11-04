@@ -9,6 +9,8 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class ReadingSearchTest {
+    init { EnglishStrings.install() }   // the logic speaks the app language; the test reads the English file
+
     private fun b(title: String, vararg authors: String, series: String? = null) =
         RBook(title, "/sdcard/Books/$title.pdf", title, authors.toList(), series)
 
