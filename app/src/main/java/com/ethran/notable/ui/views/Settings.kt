@@ -103,7 +103,7 @@ fun SettingsView(
         onUpdateSettings = { viewModel.updateSettings(it) },
         onClearAllPages = { onComplete -> viewModel.clearAllPages(onComplete) },
         onAppLanguageChange = { language ->
-            viewModel.setAppLanguage(context, language) { (context as? android.app.Activity)?.recreate() }
+            viewModel.setAppLanguage(context, language) { com.ethran.notable.i18n.restartApp(context) }
         },
         listOfGestures = viewModel.getGestureRows(),
         availableGestures = viewModel.availableGestures

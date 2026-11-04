@@ -18,13 +18,13 @@ object LanguagePrefs {
     fun app(context: Context): AppLanguage = AppLanguage.fromTag(prefs(context).getString(KEY_APP, null))
 
     fun setApp(context: Context, language: AppLanguage) {
-        prefs(context).edit().putString(KEY_APP, language.tag).apply()
+        prefs(context).edit().putString(KEY_APP, language.tag).commit()   // synchronous: the app may be restarted right after
     }
 
     fun writing(context: Context): WritingLanguage =
         WritingLanguage.fromCode(prefs(context).getString(KEY_WRITING, null))
 
     fun setWriting(context: Context, language: WritingLanguage) {
-        prefs(context).edit().putString(KEY_WRITING, language.code).apply()
+        prefs(context).edit().putString(KEY_WRITING, language.code).commit()
     }
 }
