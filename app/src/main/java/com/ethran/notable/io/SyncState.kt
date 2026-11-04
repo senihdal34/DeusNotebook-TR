@@ -10,6 +10,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import com.ethran.notable.R
+import com.ethran.notable.i18n.AppStrings
 
 private val log = ShipBook.getLogger("SyncState")
 
@@ -35,7 +37,7 @@ object SyncState {
                 log.e("Background sync failed for page $pageId: ${e.message}", e)
                 SnackState.globalSnackFlow.tryEmit(
                     SnackConf(
-                        text = "Sync failed: ${e.message}",
+                        text = AppStrings.get(R.string.snack_sync_failed, e.message ?: ""),
                         duration = 4000
                     )
                 )

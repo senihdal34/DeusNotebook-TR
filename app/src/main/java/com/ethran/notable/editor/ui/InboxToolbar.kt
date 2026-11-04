@@ -43,6 +43,9 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.stringResource
+import com.ethran.notable.R
+import com.ethran.notable.i18n.AppStrings
 
 val INBOX_TOOLBAR_COLLAPSED_HEIGHT: Dp = 55.dp
 val INBOX_TOOLBAR_EXPANDED_HEIGHT: Dp = 170.dp
@@ -101,7 +104,7 @@ fun InboxToolbar(
                     .padding(horizontal = 20.dp, vertical = 8.dp)
             ) {
                 Text(
-                    "← Back",
+                    stringResource(R.string.inbox_back),
                     fontSize = 18.sp,
                     color = Color.DarkGray
                 )
@@ -116,8 +119,8 @@ fun InboxToolbar(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                val label = if (selectedTags.isEmpty()) "Capture"
-                else "Capture · ${selectedTags.size} tag${if (selectedTags.size != 1) "s" else ""}"
+                val label = if (selectedTags.isEmpty()) stringResource(R.string.inbox_capture)
+                else AppStrings.plural(R.plurals.inbox_capture_tags, selectedTags.size, selectedTags.size)
                 Text(
                     label,
                     fontSize = 17.sp,
@@ -163,7 +166,7 @@ fun InboxToolbar(
                     .padding(horizontal = 24.dp, vertical = 8.dp)
             ) {
                 Text(
-                    "Save & Exit",
+                    stringResource(R.string.inbox_save_exit),
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.White
@@ -191,7 +194,7 @@ fun InboxToolbar(
                 ) {
                     if (tagInput.isEmpty()) {
                         Text(
-                            "search or add tags...",
+                            stringResource(R.string.inbox_tag_hint),
                             fontSize = 17.sp,
                             color = Color(0xFF999999)
                         )

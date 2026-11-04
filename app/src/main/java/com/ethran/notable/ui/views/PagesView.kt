@@ -64,6 +64,8 @@ import com.ethran.notable.utils.computeInsertionSlotRect
 import com.ethran.notable.utils.rememberReorderableGridState
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
+import androidx.compose.ui.res.stringResource
+import com.ethran.notable.R
 
 
 object PagesDestination : NavigationDestination {
@@ -141,8 +143,8 @@ fun PagesContent(
 
     pendingDeletePageId?.let { id ->
         ShowSimpleConfirmationDialog(
-            title = "Confirm Deletion",
-            message = "Are you sure you want to delete this page?",
+            title = stringResource(R.string.dialog_confirm_deletion),
+            message = stringResource(R.string.dialog_delete_page_q),
             onConfirm = {
                 onDeletePage(id)
                 pendingDeletePageId = null
@@ -344,7 +346,7 @@ private fun JumpToCurrentPill(onClick: () -> Unit) {
                 interactionSource = remember { MutableInteractionSource() }, indication = null
             ) { onClick() }
     ) {
-        Text("Jump to current", color = Color.White)
+        Text(stringResource(R.string.pages_jump_to_current), color = Color.White)
     }
 }
 
@@ -365,7 +367,7 @@ private fun EditModeSwitch(
             .clickable { onToggle(!isEditMode) }
             .padding(horizontal = 14.dp, vertical = 8.dp)
     ) {
-        Text("Edit Mode", color = if (isEditMode) Color.White else Color.Black)
+        Text(stringResource(R.string.pages_edit_mode), color = if (isEditMode) Color.White else Color.Black)
         Spacer(Modifier.width(8.dp))
         // Simple visual indicator for the switch state
         Box(

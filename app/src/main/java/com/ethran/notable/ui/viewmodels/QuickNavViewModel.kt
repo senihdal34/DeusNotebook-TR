@@ -17,6 +17,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import com.ethran.notable.R
+import com.ethran.notable.i18n.AppStrings
 
 
 data class QuickNavUiState(
@@ -152,7 +154,7 @@ class QuickNavViewModel(
     fun onReturnClick(quickNavSourcePageId: String?) {
         if (quickNavSourcePageId == null) {
             SnackState.globalSnackFlow.tryEmit(
-                SnackConf(text = "Can't go back, no QuickNav source page", duration = 4000)
+                SnackConf(text = AppStrings.get(R.string.snack_quicknav_no_source), duration = 4000)
             )
         } else {
             CanvasEventBus.changePage.tryEmit(quickNavSourcePageId)

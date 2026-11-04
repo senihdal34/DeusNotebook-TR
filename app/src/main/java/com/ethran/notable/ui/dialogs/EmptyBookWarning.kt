@@ -1,6 +1,8 @@
 package com.ethran.notable.ui.dialogs
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.stringResource
+import com.ethran.notable.R
 import com.ethran.notable.data.db.Notebook
 
 @Composable
@@ -10,8 +12,8 @@ fun EmptyBookWarningHandler(
     val title = emptyBook.title
     val createdAt = emptyBook.createdAt
     ShowSimpleConfirmationDialog(
-        title = "There is a book without pages!!!",
-        message = "We suggest deleting book \"$title\", it was created at $createdAt. Do you want to do it?",
+        title = stringResource(R.string.empty_book_title),
+        message = stringResource(R.string.empty_book_message, title, createdAt.toString()),
         onConfirm = {
             onDelete(emptyBook.id)
         },

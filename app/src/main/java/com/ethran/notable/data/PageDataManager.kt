@@ -46,6 +46,8 @@ import java.lang.ref.SoftReference
 import java.security.MessageDigest
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.math.max
+import com.ethran.notable.R
+import com.ethran.notable.i18n.AppStrings
 
 
 // Save bitmap, to avoid loading from disk every time.
@@ -627,7 +629,7 @@ object PageDataManager {
                             if (!waitForFileAvailable(filePath)) {
                                 log.w("File changed, but does not exist: $filePath")
                                 SnackState.globalSnackFlow.emit(
-                                    SnackConf(text = "Background does not exist", duration = 3000)
+                                    SnackConf(text = AppStrings.get(R.string.snack_bg_missing), duration = 3000)
                                 )
                                 return@launch
                             } else
@@ -663,7 +665,7 @@ object PageDataManager {
                             if (pid == currentPage) {
                                 CanvasEventBus.forceUpdate.emit(null)
                                 SnackState.globalSnackFlow.emit(
-                                    SnackConf(text = "Background file changed", duration = 4000)
+                                    SnackConf(text = AppStrings.get(R.string.snack_bg_changed), duration = 4000)
                                 )
                             }
                         }

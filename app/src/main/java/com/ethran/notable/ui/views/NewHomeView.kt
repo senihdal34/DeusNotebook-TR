@@ -80,6 +80,9 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import com.ethran.notable.R
+import com.ethran.notable.i18n.AppStrings
 import com.ethran.notable.ui.showHint
 import com.ethran.notable.ui.viewmodels.HomeSection
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -106,7 +109,6 @@ private val Grey2 = Color(0xFF999999)
 private val Paper = Color(0xFFF6F6F2)
 private val Sans = FontFamily.SansSerif
 private val Serif = FontFamily.Serif
-private val TR = Locale("tr", "TR")
 private val Pill = androidx.compose.foundation.shape.RoundedCornerShape(50)
 
 @Composable
@@ -154,6 +156,8 @@ fun HomeView(
     var pickerInput by remember { mutableStateOf("") }
     var deletingTopic by remember { mutableStateOf<String?>(null) }
     val thumbDir = File(LocalContext.current.filesDir, "pages/previews/thumbs")
+    val pinnedHint = stringResource(R.string.home_added_to_favorites)
+    val unpinnedHint = stringResource(R.string.home_removed_from_favorites)
 
     val actions = HomeActions(
         open = onOpenPage,
@@ -185,7 +189,7 @@ fun HomeView(
         togglePin = { page ->
             val pinned = state.pinnedPages.any { it.id == page.id }
             viewModel.togglePin(page.id, pinned)
-            showHint(if (pinned) "Sabitten kaldırıldı" else "Sabitlendi", hintScope, 1200)
+            showHint(if (pinned) unpinnedHint else pinnedHint, hintScope, 1200)
         }
     )
 
@@ -265,7 +269,7 @@ private fun Modifier.tap(onClick: () -> Unit) = clickable(
 @Composable
 private fun Caps(text: String, size: Int = 14, color: Color = Grey1, weight: FontWeight = FontWeight.SemiBold, modifier: Modifier = Modifier) =
     Text(
-        text = text.uppercase(TR), fontFamily = Sans, fontSize = size.sp, fontWeight = weight,
+        text = text.uppercase(AppStrings.locale), fontFamily = Sans, fontSize = size.sp, fontWeight = weight,
         letterSpacing = (size * 0.14f).sp, color = color, modifier = modifier
     )
 
@@ -280,7 +284,8 @@ private fun Masthead(
     state: HomeUiState, selected: String?, section: HomeSection, landscape: Boolean,
     a: HomeActions, adding: Boolean, input: String
 ) {
-    val date = remember { SimpleDateFormat("EEEE, d MMMM yyyy", TR).format(Date()) }
+    val datePattern = stringResource(R.string.home_date_pattern)
+    val date = remember(datePattern) { SimpleDateFormat(datePattern, AppStrings.locale).format(Date()) }
     val total = (state.recentPages + state.pinnedPages).distinctBy { it.id }.size
     // Same header as the Weekly Planner page: logo and small title on the left, a small summary block on the right.
     Row(Modifier.fillMaxWidth().padding(bottom = 10.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -290,13 +295,13 @@ private fun Masthead(
         )
         Spacer(Modifier.width(18.dp))
         Text(
-            when (section) { HomeSection.Pinned -> "Favorite Notes"; HomeSection.Reading -> "Reading Board"; HomeSection.Notes -> "Personal Notes" }, fontFamily = Serif, fontWeight = FontWeight.Bold,
+            stringResource(when (section) { HomeSection.Pinned -> R.string.home_title_favorites; HomeSection.Reading -> R.string.home_title_reading; HomeSection.Notes -> R.string.home_title_notes }), fontFamily = Serif, fontWeight = FontWeight.Bold,
             fontSize = 36.sp, letterSpacing = (-1).sp, color = Ink, maxLines = 1, modifier = Modifier.weight(1f)
         )
         Column(horizontalAlignment = Alignment.End) {
             Caps(date, 12, Grey1, FontWeight.Bold)
-            Caps("$total not · ${state.pinnedPages.size} favori", 12, Grey1, FontWeight.Bold, modifier = Modifier.padding(top = 2.dp))
-            Caps("Ayarlar", 12, Ink, FontWeight.Bold, Modifier.tap(a.settings).padding(top = 2.dp, start = 12.dp))
+            Caps(stringResource(R.string.home_summary, AppStrings.plural(R.plurals.home_notes_count, total, total), AppStrings.plural(R.plurals.home_favorites_count, state.pinnedPages.size, state.pinnedPages.size)), 12, Grey1, FontWeight.Bold, modifier = Modifier.padding(top = 2.dp))
+            Caps(stringResource(R.string.home_settings), 12, Ink, FontWeight.Bold, Modifier.tap(a.settings).padding(top = 2.dp, start = 12.dp))
         }
     }
     Rule(5.dp)
@@ -324,12 +329,13 @@ private fun MainNav(section: HomeSection, a: HomeActions) {
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun PinnedStrip(state: HomeUiState, a: HomeActions) {
+    val untitled = stringResource(R.string.home_untitled_note)
     if (state.pinnedPages.isEmpty()) return
     Row(
         Modifier.fillMaxWidth().padding(vertical = 12.dp),
         horizontalArrangement = Arrangement.spacedBy(18.dp), verticalAlignment = Alignment.CenterVertically
     ) {
-        Caps("Sabit", 12, Grey1, FontWeight.Bold, Modifier.width(52.dp))
+        Caps(stringResource(R.string.home_favorites_label), 12, Grey1, FontWeight.Bold, Modifier.widthIn(min = 52.dp))
         state.pinnedPages.take(4).forEach { p ->
             Row(
                 Modifier.weight(1f).combinedClickable(
@@ -342,7 +348,7 @@ private fun PinnedStrip(state: HomeUiState, a: HomeActions) {
                     PagePreview(Modifier.fillMaxSize(), p.id, state.thumbRevision, ContentScale.FillWidth, Alignment.TopCenter, Color.White)
                 }
                 Spacer(Modifier.width(10.dp))
-                Text(p.title.ifBlank { "İsimsiz Not" }, fontFamily = Serif, fontWeight = FontWeight.Bold, fontSize = 20.sp,
+                Text(p.title.ifBlank { untitled }, fontFamily = Serif, fontWeight = FontWeight.Bold, fontSize = 20.sp,
                     lineHeight = 22.sp, color = Ink, maxLines = 2, overflow = TextOverflow.Ellipsis)
             }
         }
@@ -354,8 +360,9 @@ private fun PinnedStrip(state: HomeUiState, a: HomeActions) {
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun PinnedPage(state: HomeUiState, a: HomeActions) {
+    val untitled = stringResource(R.string.home_untitled_note)
     if (state.pinnedPages.isEmpty()) {
-        Text("Sabit not yok. Bir notu sabitlemek için kartına basılı tut.", fontFamily = Serif, fontStyle = FontStyle.Italic,
+        Text(stringResource(R.string.home_no_favorites), fontFamily = Serif, fontStyle = FontStyle.Italic,
             fontSize = 26.sp, color = Grey1, modifier = Modifier.padding(vertical = 40.dp))
         return
     }
@@ -372,7 +379,7 @@ private fun PinnedPage(state: HomeUiState, a: HomeActions) {
             }
             Spacer(Modifier.width(24.dp))
             Column(Modifier.weight(1f)) {
-                Text(p.title.ifBlank { "İsimsiz Not" }, fontFamily = Serif, fontWeight = FontWeight.Bold, fontSize = 38.sp,
+                Text(p.title.ifBlank { untitled }, fontFamily = Serif, fontWeight = FontWeight.Bold, fontSize = 38.sp,
                     letterSpacing = (-0.5).sp, color = Ink, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 Caps(RelativeTime.format(p.createdAt), 14, Grey1, modifier = Modifier.padding(top = 8.dp))
                 state.excerpts[p.id]?.let {
@@ -382,7 +389,7 @@ private fun PinnedPage(state: HomeUiState, a: HomeActions) {
                 Spacer(Modifier.height(12.dp))
                 NoteActions(p, state, a)
             }
-            Caps("Kaldır", 14, Grey1, modifier = Modifier.tap { a.unpin(p.id) }.padding(14.dp))
+            Caps(stringResource(R.string.home_remove), 14, Grey1, modifier = Modifier.tap { a.unpin(p.id) }.padding(14.dp))
         }
         Rule(1.5.dp, Grey2)
     }
@@ -394,7 +401,7 @@ private fun SectionNav(state: HomeUiState, selected: String?, a: HomeActions) {
         Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(vertical = 10.dp),
         horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically
     ) {
-        NavItem("Tümü", selected == null, last = false) { a.select(null) }
+        NavItem(stringResource(R.string.home_topics_all), selected == null, last = false) { a.select(null) }
         state.topicGroups.forEach { g -> NavItem(g.tag, selected == g.tag, last = false) { a.select(g.tag) } }
         NavItem("+", false, last = true) { a.toggleAdd() }
     }
@@ -404,13 +411,13 @@ private fun SectionNav(state: HomeUiState, selected: String?, a: HomeActions) {
             Text("#$selected", fontFamily = Serif, fontSize = 22.sp, color = Ink)
             Spacer(Modifier.width(18.dp))
             if (a.deletingTopic == selected) {
-                Caps("Konu silinsin mi?", 12, Ink, FontWeight.Bold)
+                Caps(stringResource(R.string.home_delete_topic_q), 12, Ink, FontWeight.Bold)
                 Spacer(Modifier.width(10.dp))
-                ActionChip("Sil", on = true) { a.removeTopic(selected) }
+                ActionChip(stringResource(R.string.action_delete), on = true) { a.removeTopic(selected) }
                 Spacer(Modifier.width(8.dp))
-                ActionChip("Vazgeç") { a.askDeleteTopic(null) }
+                ActionChip(stringResource(R.string.action_cancel)) { a.askDeleteTopic(null) }
             } else {
-                ActionChip("Konuyu sil") { a.askDeleteTopic(selected) }
+                ActionChip(stringResource(R.string.home_delete_topic)) { a.askDeleteTopic(selected) }
             }
         }
     }
@@ -437,13 +444,13 @@ private fun TopicInput(value: String, a: HomeActions) {
             cursorBrush = SolidColor(Ink),
             modifier = Modifier.weight(1f).border(2.dp, Ink).padding(14.dp, 12.dp),
             decorationBox = { inner ->
-                if (value.isEmpty()) Text("yeni konu…", fontFamily = Serif, fontStyle = FontStyle.Italic, fontSize = 24.sp, color = Grey1)
+                if (value.isEmpty()) Text(stringResource(R.string.home_new_topic_hint), fontFamily = Serif, fontStyle = FontStyle.Italic, fontSize = 24.sp, color = Grey1)
                 inner()
             }
         )
         Spacer(Modifier.width(14.dp))
         Box(Modifier.background(Ink).tap(a.addTopic).padding(horizontal = 26.dp, vertical = 15.dp)) {
-            Caps("Ekle", 16, Color.White, FontWeight.Bold)
+            Caps(stringResource(R.string.action_add), 16, Color.White, FontWeight.Bold)
         }
     }
 }
@@ -456,8 +463,8 @@ private fun Stories(
 ) {
     if (pages.isEmpty()) {
         Text(
-            if (selected == null) "Henüz not yok. Aşağıdaki düğmeyle ilk notunu yaz."
-            else "Bu konuda not yok. Notun içine #$selected yazınca burada görünür.",
+            if (selected == null) stringResource(R.string.home_no_notes)
+            else stringResource(R.string.home_no_notes_in_topic, selected),
             fontFamily = Serif, fontStyle = FontStyle.Italic, fontSize = 26.sp, color = Grey1,
             modifier = Modifier.padding(vertical = 40.dp)
         )
@@ -482,6 +489,7 @@ private fun Stories(
 
 @Composable
 private fun Lead(page: Page, state: HomeUiState, selected: String?, landscape: Boolean, a: HomeActions) {
+    val untitled = stringResource(R.string.home_untitled_note)
     val thumbW = if (landscape) 300.dp else 350.dp
     val thumbH = if (landscape) 380.dp else 470.dp
     Row(Modifier.fillMaxWidth().padding(vertical = if (landscape) 20.dp else 26.dp)) {
@@ -490,9 +498,9 @@ private fun Lead(page: Page, state: HomeUiState, selected: String?, landscape: B
         }
         Spacer(Modifier.width(if (landscape) 28.dp else 34.dp))
         Column(Modifier.weight(1f).openOrPin(a, page)) {
-            Caps(if (selected == null) "Son not · ${RelativeTime.format(page.createdAt)}" else "#$selected · ${RelativeTime.format(page.createdAt)}", 14, Grey1, FontWeight.Bold)
+            Caps(if (selected == null) "${stringResource(R.string.home_latest_note)} · ${RelativeTime.format(page.createdAt)}" else "#$selected · ${RelativeTime.format(page.createdAt)}", 14, Grey1, FontWeight.Bold)
             Text(
-                page.title.ifBlank { "İsimsiz Not" }, fontFamily = Serif, fontWeight = FontWeight.Bold,
+                page.title.ifBlank { untitled }, fontFamily = Serif, fontWeight = FontWeight.Bold,
                 fontSize = if (landscape) 56.sp else 64.sp, lineHeight = if (landscape) 58.sp else 66.sp,
                 letterSpacing = (-1.5).sp, color = Ink, maxLines = 3, overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.padding(top = 14.dp, bottom = 14.dp)
@@ -502,7 +510,7 @@ private fun Lead(page: Page, state: HomeUiState, selected: String?, landscape: B
                 Text(excerpt, fontFamily = Serif, fontStyle = FontStyle.Italic, fontSize = 26.sp, lineHeight = 35.sp,
                     color = Ink, maxLines = if (landscape) 6 else 7, overflow = TextOverflow.Ellipsis)
             }
-            Text("1 sayfa", fontFamily = Sans, fontSize = 16.sp, color = Grey1, modifier = Modifier.padding(top = 18.dp, bottom = 14.dp))
+            Text(stringResource(R.string.home_one_page), fontFamily = Sans, fontSize = 16.sp, color = Grey1, modifier = Modifier.padding(top = 18.dp, bottom = 14.dp))
             NoteActions(page, state, a)
         }
     }
@@ -511,6 +519,7 @@ private fun Lead(page: Page, state: HomeUiState, selected: String?, landscape: B
 
 @Composable
 private fun Story(page: Page, state: HomeUiState, a: HomeActions, landscape: Boolean) {
+    val untitled = stringResource(R.string.home_untitled_note)
     if (landscape) {
         // Wide card: small page on the left, headline and first lines on the right.
         Row(Modifier.fillMaxWidth().openOrPin(a, page)) {
@@ -520,7 +529,7 @@ private fun Story(page: Page, state: HomeUiState, a: HomeActions, landscape: Boo
             Spacer(Modifier.width(20.dp))
             Column(Modifier.weight(1f)) {
                 Text(
-                    page.title.ifBlank { "İsimsiz Not" }, fontFamily = Serif, fontWeight = FontWeight.Bold, fontSize = 30.sp,
+                    page.title.ifBlank { untitled }, fontFamily = Serif, fontWeight = FontWeight.Bold, fontSize = 30.sp,
                     lineHeight = 33.sp, letterSpacing = (-0.5).sp, color = Ink, maxLines = 2, overflow = TextOverflow.Ellipsis
                 )
                 Caps(RelativeTime.format(page.createdAt), 13, Grey1, modifier = Modifier.padding(top = 6.dp, bottom = 8.dp))
@@ -540,7 +549,7 @@ private fun Story(page: Page, state: HomeUiState, a: HomeActions, landscape: Boo
             PagePreview(Modifier.fillMaxSize(), page.id, state.thumbRevision, ContentScale.FillWidth, Alignment.TopCenter, Color.White)
         }
         Text(
-            page.title.ifBlank { "İsimsiz Not" }, fontFamily = Serif, fontWeight = FontWeight.Bold, fontSize = 30.sp,
+            page.title.ifBlank { untitled }, fontFamily = Serif, fontWeight = FontWeight.Bold, fontSize = 30.sp,
             lineHeight = 33.sp, letterSpacing = (-0.5).sp, color = Ink, maxLines = 2, overflow = TextOverflow.Ellipsis,
             modifier = Modifier.padding(top = 12.dp, bottom = 6.dp)
         )
@@ -557,10 +566,10 @@ private fun Rail(state: HomeUiState, selected: String?, a: HomeActions) {
     Row(Modifier.width(350.dp).fillMaxHeight()) {
         Box(Modifier.width(1.5.dp).fillMaxHeight().background(Ink))
         Column(Modifier.padding(start = 28.dp)) {
-            Caps("Konular", 14, Grey1, FontWeight.Bold, Modifier.padding(top = 16.dp, bottom = 8.dp))
+            Caps(stringResource(R.string.home_topics), 14, Grey1, FontWeight.Bold, Modifier.padding(top = 16.dp, bottom = 8.dp))
             Rule()
             if (state.topicGroups.isEmpty()) {
-                Text("Henüz konu yok", fontFamily = Serif, fontStyle = FontStyle.Italic, fontSize = 22.sp, color = Grey1,
+                Text(stringResource(R.string.home_no_topics), fontFamily = Serif, fontStyle = FontStyle.Italic, fontSize = 22.sp, color = Grey1,
                     modifier = Modifier.padding(vertical = 12.dp))
             }
             state.topicGroups.forEach { g ->
@@ -583,7 +592,7 @@ private fun Rail(state: HomeUiState, selected: String?, a: HomeActions) {
 @Composable
 private fun NewNoteButton(a: HomeActions, modifier: Modifier = Modifier) {
     Box(modifier.border(BorderStroke(2.5.dp, Ink)).tap(a.newNote).padding(horizontal = 36.dp, vertical = 16.dp)) {
-        Caps("+ Yeni not yaz", 18, Ink, FontWeight.Bold)
+        Caps(stringResource(R.string.home_new_note), 18, Ink, FontWeight.Bold)
     }
 }
 
@@ -615,15 +624,15 @@ private fun NoteActions(page: Page, state: HomeUiState, a: HomeActions) {
     Column(Modifier.fillMaxWidth()) {
         if (a.confirmDelete == page.id) {
             FlowRow(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Box(Modifier.height(34.dp), contentAlignment = Alignment.CenterStart) { Caps("Not silinsin mi?", 14, Ink, FontWeight.Bold) }
-                ActionChip("Sil", on = true) { a.deletePage(page.id) }
-                ActionChip("Vazgeç") { a.askDelete(null) }
+                Box(Modifier.height(34.dp), contentAlignment = Alignment.CenterStart) { Caps(stringResource(R.string.home_delete_note_q), 14, Ink, FontWeight.Bold) }
+                ActionChip(stringResource(R.string.action_delete), on = true) { a.deletePage(page.id) }
+                ActionChip(stringResource(R.string.action_cancel)) { a.askDelete(null) }
             }
         } else {
             FlowRow(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                IconButton(FeatherIcons.Trash, "Notu sil") { a.askDelete(page.id) }
-                ActionChip("# Seç", on = selectOpen) { a.openTags("select:${page.id}") }
-                ActionChip("+ Etiket", on = addOpen) { a.openTags("add:${page.id}") }
+                IconButton(FeatherIcons.Trash, stringResource(R.string.home_delete_note)) { a.askDelete(page.id) }
+                ActionChip(stringResource(R.string.home_choose_tag_button), on = selectOpen) { a.openTags("select:${page.id}") }
+                ActionChip(stringResource(R.string.home_add_tag_button), on = addOpen) { a.openTags("add:${page.id}") }
             }
         }
         if (tags.isNotEmpty()) {
@@ -645,9 +654,9 @@ private fun TagSelect(page: Page, state: HomeUiState, a: HomeActions) {
     val all = (state.topicGroups.map { it.tag } + own).distinct()
     Column(Modifier.fillMaxWidth().padding(top = 12.dp).border(1.5.dp, Ink).padding(12.dp)) {
         if (all.isEmpty()) {
-            Text("Henüz etiket yok. “+ Etiket” ile ilkini ekle.", fontFamily = Serif, fontStyle = FontStyle.Italic, fontSize = 20.sp, color = Grey1)
+            Text(stringResource(R.string.home_no_tags), fontFamily = Serif, fontStyle = FontStyle.Italic, fontSize = 20.sp, color = Grey1)
         } else {
-            Caps("Etiket seç", 12, Grey1, FontWeight.Bold, Modifier.padding(bottom = 8.dp))
+            Caps(stringResource(R.string.home_choose_tag), 12, Grey1, FontWeight.Bold, Modifier.padding(bottom = 8.dp))
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 all.forEach { tag -> ActionChip("#$tag", on = tag in own) { a.toggleTag(page.id, tag) } }
             }
@@ -666,13 +675,13 @@ private fun TagAdd(page: Page, a: HomeActions) {
             textStyle = TextStyle(fontFamily = Serif, fontSize = 22.sp, color = Ink), cursorBrush = SolidColor(Ink),
             modifier = Modifier.weight(1f).height(40.dp).clip(Pill).border(1.5.dp, Ink, Pill).padding(16.dp, 9.dp).focusRequester(focus),
             decorationBox = { inner ->
-                if (a.pickerInput.isEmpty()) Text("yeni etiket…", fontFamily = Serif, fontStyle = FontStyle.Italic, fontSize = 22.sp, color = Grey1)
+                if (a.pickerInput.isEmpty()) Text(stringResource(R.string.home_new_tag_hint), fontFamily = Serif, fontStyle = FontStyle.Italic, fontSize = 22.sp, color = Grey1)
                 inner()
             }
         )
         Spacer(Modifier.width(10.dp))
         Box(Modifier.height(40.dp).clip(Pill).background(Ink).tap { a.addPickerTag(page.id) }.padding(horizontal = 22.dp), contentAlignment = Alignment.Center) {
-            Caps("Ekle", 15, Color.White, FontWeight.Bold)
+            Caps(stringResource(R.string.action_add), 15, Color.White, FontWeight.Bold)
         }
     }
 }

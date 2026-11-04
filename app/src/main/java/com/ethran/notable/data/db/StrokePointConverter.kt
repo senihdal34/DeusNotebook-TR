@@ -6,6 +6,8 @@ import io.shipbook.shipbooksdk.ShipBook
 import net.jpountz.lz4.LZ4Factory
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
+import com.ethran.notable.R
+import com.ethran.notable.i18n.AppStrings
 
 /* ------------------ Mask Bits & Helpers ------------------ */
 
@@ -191,7 +193,7 @@ fun encodeStrokePoints(
         log.e("Page is too large!")
         SnackState.globalSnackFlow.tryEmit(
             SnackConf(
-                id = "oversize", text = "Page is too large!", duration = 4000
+                id = "oversize", text = AppStrings.get(R.string.snack_page_too_large), duration = 4000
             )
         )
         throw IllegalArgumentException("Page is too large!")

@@ -13,6 +13,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.shipbook.shipbooksdk.Log
+import androidx.compose.ui.res.stringResource
+import com.ethran.notable.R
 
 @Composable
 fun PdfImportChoiceDialog(
@@ -26,11 +28,11 @@ fun PdfImportChoiceDialog(
     val pathTooLong = pathLength > 100
 
     ShowConfirmationDialog(
-        title = "Import PDF Background",
+        title = stringResource(R.string.pdf_import_title),
         content = {
             Column {
                 Text(
-                    text = "Do you want to copy or observe the PDF?",
+                    text = stringResource(R.string.pdf_import_question),
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp
                 )
@@ -38,18 +40,18 @@ fun PdfImportChoiceDialog(
 
                 // --- Observe Option ---
                 Text(
-                    text = "• Observe:",
+                    text = stringResource(R.string.pdf_import_observe_label),
                     fontWeight = FontWeight.SemiBold
                 )
                 Text(
-                    text = "The app will link to the original file. This is useful for files that change often (e.g., from cloud services or LaTeX).",
+                    text = stringResource(R.string.pdf_import_observe_text),
                     fontSize = 14.sp
                 )
                 // Add a warning if the file path is too long
                 if (pathTooLong) {
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "Warning: The file path is very long ($pathLength characters). Observing may fail on some systems.",
+                        text = stringResource(R.string.pdf_import_path_warning, pathLength),
                         color = MaterialTheme.colors.error, // Use theme's error color for emphasis
                         fontWeight = FontWeight.Bold,
                         fontSize = 24.sp
@@ -60,11 +62,11 @@ fun PdfImportChoiceDialog(
 
                 // --- Copy Option ---
                 Text(
-                    text = "• Copy:",
+                    text = stringResource(R.string.pdf_import_copy_label),
                     fontWeight = FontWeight.SemiBold
                 )
                 Text(
-                    text = "The app will make its own copy of the file. Use this for safe, static storage.",
+                    text = stringResource(R.string.pdf_import_copy_text),
                     fontSize = 14.sp
                 )
             }
@@ -72,7 +74,7 @@ fun PdfImportChoiceDialog(
         onConfirm = { onCopy(uri) },
         onCancel = { onObserve(uri) },
         onDismiss = { onDismiss() },
-        confirmButtonText = "Copy",
-        cancelButtonText = "Observe"
+        confirmButtonText = stringResource(R.string.pdf_import_copy),
+        cancelButtonText = stringResource(R.string.pdf_import_observe)
     )
 }

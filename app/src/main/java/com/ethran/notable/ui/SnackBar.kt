@@ -30,6 +30,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.UUID
 import kotlin.coroutines.cancellation.CancellationException
+import com.ethran.notable.R
+import com.ethran.notable.i18n.AppStrings
 
 val LocalSnackContext = staticCompositionLocalOf { SnackState() }
 
@@ -117,7 +119,7 @@ class SnackState {
             // Handle actual errors
             Log.e("showSnackDuring", "Task failed", e)
             withContext(NonCancellable) {
-                displaySnack(SnackConf(text = "Error: ${e.message}", duration = 3000))
+                displaySnack(SnackConf(text = AppStrings.get(R.string.snack_error, e.message ?: ""), duration = 3000))
             }
             throw e
         } finally {

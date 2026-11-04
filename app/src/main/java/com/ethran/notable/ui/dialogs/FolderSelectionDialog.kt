@@ -28,6 +28,8 @@ import com.ethran.notable.data.AppRepository
 import com.ethran.notable.data.db.Folder
 import com.ethran.notable.ui.components.BreadCrumb
 import com.ethran.notable.ui.components.getFolderList
+import androidx.compose.ui.res.stringResource
+import com.ethran.notable.R
 
 
 @Composable
@@ -60,7 +62,7 @@ fun ShowFolderSelectionDialog(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "Choose folder to move \"$notebookName\":",
+                text = stringResource(R.string.folder_move_prompt, notebookName),
                 fontWeight = FontWeight.Bold,
                 fontSize = 24.sp,
                 modifier = Modifier.padding(bottom = 8.dp)
@@ -108,8 +110,8 @@ fun ShowFolderSelectionDialog(
                 horizontalArrangement = Arrangement.SpaceAround,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                ActionButton("Cancel", onClick = onCancel)
-                ActionButton("Confirm", onClick = { onConfirm(currentFolderId) })
+                ActionButton(stringResource(R.string.action_cancel), onClick = onCancel)
+                ActionButton(stringResource(R.string.action_confirm), onClick = { onConfirm(currentFolderId) })
             }
         }
     }

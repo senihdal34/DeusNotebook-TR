@@ -27,6 +27,8 @@ import com.ethran.notable.editor.utils.strokeBounds
 import com.ethran.notable.io.uriToBitmap
 import com.ethran.notable.ui.showHint
 import io.shipbook.shipbooksdk.ShipBook
+import com.ethran.notable.R
+import com.ethran.notable.i18n.AppStrings
 
 private val pageDrawingLog = ShipBook.getLogger("PageDrawingLog")
 
@@ -291,9 +293,9 @@ fun drawOnCanvasFromPage(
             pageDrawingLog.e("PageView.kt(${page.currentPageId}): Drawing images failed: ${e.message}", e)
 
             val errorMessage = if (e.message?.contains("does not have permission") == true) {
-                "Permission error: Unable to access image."
+                AppStrings.get(R.string.hint_image_permission)
             } else {
-                "Failed to load images."
+                AppStrings.get(R.string.hint_images_load_failed)
             }
             showHint(errorMessage, page.coroutineScope)
         }
@@ -308,7 +310,7 @@ fun drawOnCanvasFromPage(
             }
         } catch (e: Exception) {
             pageDrawingLog.e("PageView.kt: Drawing strokes failed: ${e.message}", e)
-            showHint("Error drawing strokes", page.coroutineScope)
+            showHint(AppStrings.get(R.string.hint_strokes_draw_failed), page.coroutineScope)
         }
         // Draw annotation overlays on top of strokes
         try {

@@ -17,6 +17,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import javax.inject.Inject
+import com.ethran.notable.R
+import com.ethran.notable.i18n.AppStrings
 
 private val log = ShipBook.getLogger("StrokeReencode")
 
@@ -40,7 +42,7 @@ class StrokeMigrationHelper @Inject constructor(
             SnackState.globalSnackFlow.tryEmit(
                 SnackConf(
                     id = "FilePermissions",
-                    text = "No file permissions! Please grant file permissions and restart the app",
+                    text = AppStrings.get(R.string.snack_no_file_permission),
                     duration = 10000
                 )
             )
@@ -69,7 +71,7 @@ class StrokeMigrationHelper @Inject constructor(
                 db.execSQL("DROP TABLE IF EXISTS stroke_old")
                 SnackState.globalSnackFlow.tryEmit(
                     SnackConf(
-                        id = progressSnackId, text = "Stroke migration complete.", duration = 3000
+                        id = progressSnackId, text = AppStrings.get(R.string.snack_migration_complete), duration = 3000
                     )
                 )
                 break
@@ -79,7 +81,7 @@ class StrokeMigrationHelper @Inject constructor(
             SnackState.globalSnackFlow.tryEmit(
                 SnackConf(
                     id = progressSnackId,
-                    text = "Migrating strokes: ${"%.1f".format(percent)}% (${totalInitial - remaining}/$totalInitial) batch=$batchSize",
+                    text = AppStrings.get(R.string.snack_migrating, "%.1f".format(percent), totalInitial - remaining, totalInitial, batchSize),
                     duration = null
                 )
             )
@@ -292,7 +294,7 @@ class StrokeMigrationHelper @Inject constructor(
             SnackState.globalSnackFlow.tryEmit(
                 SnackConf(
                     id = "oversize_1",
-                    text = "Deleted oversized stroke data during migration. Some pen strokes may have been removed.",
+                    text = AppStrings.get(R.string.snack_migration_deleted_oversize),
                     duration = 4000
                 )
             )

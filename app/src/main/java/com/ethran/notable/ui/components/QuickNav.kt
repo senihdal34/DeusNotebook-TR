@@ -33,6 +33,8 @@ import com.ethran.notable.ui.noRippleClickable
 import com.ethran.notable.ui.viewmodels.QuickNavUiState
 import com.ethran.notable.ui.viewmodels.QuickNavViewModel
 import io.shipbook.shipbooksdk.ShipBook
+import androidx.compose.ui.res.stringResource
+import com.ethran.notable.R
 
 private val logQuickNav = ShipBook.getLogger("QuickNav")
 
@@ -136,7 +138,7 @@ fun QuickNavContent(
                 appRepository = appRepository,
                 pages = uiState.favoritePages,
                 currentPageId = uiState.currentPageId,
-                title = "Favorite pages",
+                title = stringResource(R.string.quicknav_favorite_pages),
                 onSelectPage = { goToPage(it) }
             )
 

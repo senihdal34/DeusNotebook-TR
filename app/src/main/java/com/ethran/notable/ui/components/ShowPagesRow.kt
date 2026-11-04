@@ -34,6 +34,8 @@ import com.onyx.android.sdk.extension.isNullOrEmpty
 import compose.icons.FeatherIcons
 import compose.icons.feathericons.FilePlus
 import io.shipbook.shipbooksdk.ShipBook
+import androidx.compose.ui.res.stringResource
+import com.ethran.notable.R
 
 
 @Composable
@@ -41,7 +43,7 @@ fun ShowPagesRow(
     appRepository: AppRepository,
     pages: List<Page>?,
     currentPageId: String? = null,
-    title: String? = "Quick Pages",
+    title: String? = stringResource(R.string.home_quick_pages),
     onSelectPage: (String) -> Unit,
     showAddQuickPage: Boolean = false,
     onCreateNewQuickPage: () -> Unit = {},
