@@ -41,6 +41,8 @@ import com.ethran.notable.ui.SnackState.Companion.logAndShowError
 import com.ethran.notable.ui.noRippleClickable
 import io.shipbook.shipbooksdk.ShipBook
 import kotlinx.coroutines.launch
+import androidx.compose.ui.res.stringResource
+import com.ethran.notable.R
 
 private val log = ShipBook.getLogger("FolderConfig")
 
@@ -82,7 +84,7 @@ fun FolderConfigDialog(folderRepository: FolderRepository,
             Column(
                 Modifier.padding(20.dp, 10.dp)
             ) {
-                Text(text = "Folder Setting", fontWeight = FontWeight.Bold)
+                Text(text = stringResource(R.string.folder_setting), fontWeight = FontWeight.Bold)
             }
             Box(
                 Modifier
@@ -97,7 +99,7 @@ fun FolderConfigDialog(folderRepository: FolderRepository,
 
                 Row {
                     Text(
-                        text = "Folder Title",
+                        text = stringResource(R.string.folder_title),
                         fontWeight = FontWeight.Bold
                     )
                     Spacer(Modifier.width(10.dp))
@@ -149,7 +151,7 @@ fun FolderConfigDialog(folderRepository: FolderRepository,
                 Modifier.padding(20.dp, 10.dp)
             ) {
                 Text(
-                    text = "Delete Folder",
+                    text = stringResource(R.string.folder_delete),
                     textAlign = TextAlign.Center,
                     modifier = Modifier.noRippleClickable {
                         scope.launch {

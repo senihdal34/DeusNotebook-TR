@@ -18,6 +18,8 @@ import io.shipbook.shipbooksdk.ShipBook
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
+import com.ethran.notable.R
+import com.ethran.notable.i18n.AppStrings
 
 class ImageHandler(
     private val context: Context,
@@ -43,7 +45,7 @@ class ImageHandler(
         // Convert the image to a software-backed bitmap
         val imageBitmap = uriToBitmap(context, imageUri)?.asImageBitmap()
         if (imageBitmap == null) showHint(
-            "There was an error during image processing.", coroutineScope
+            AppStrings.get(R.string.hint_image_error), coroutineScope
         )
         val softwareBitmap = imageBitmap?.asAndroidBitmap()?.copy(Bitmap.Config.ARGB_8888, true)
         if (softwareBitmap != null) {

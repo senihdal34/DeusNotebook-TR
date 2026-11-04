@@ -50,6 +50,8 @@ import com.ethran.notable.ui.viewmodels.BugReportUiState
 import com.ethran.notable.ui.viewmodels.BugReportViewModel
 import com.onyx.android.sdk.utils.ClipboardUtils.copyToClipboard
 import java.net.URLEncoder
+import androidx.compose.ui.res.stringResource
+import com.ethran.notable.R
 
 
 
@@ -74,13 +76,13 @@ fun BugReportScreen(
 
             context.startActivity(Intent(Intent.ACTION_VIEW, url.toUri()))
         } catch (e: Exception) {
-            Toast.makeText(context, "Failed to submit report", Toast.LENGTH_LONG).show()
+            Toast.makeText(context, context.getString(R.string.report_submit_failed), Toast.LENGTH_LONG).show()
         }
     }
 
     fun copyReportToClipboard() {
         copyToClipboard(context, uiState.finalMarkdown)
-        Toast.makeText(context, "Report copied to clipboard", Toast.LENGTH_SHORT).show()
+        Toast.makeText(context, context.getString(R.string.report_copied), Toast.LENGTH_SHORT).show()
     }
 
     BugReportScreenContent(
@@ -120,7 +122,7 @@ fun BugReportScreenContent(
             IconButton(onClick = onBack) {
                 Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
             }
-            Text("Report an Issue", style = MaterialTheme.typography.h6)
+            Text(stringResource(R.string.report_title), style = MaterialTheme.typography.h6)
         }
 
         Spacer(Modifier.height(16.dp))
@@ -128,7 +130,7 @@ fun BugReportScreenContent(
         // Description field
         OutlinedTextField(
             value = uiState.description, onValueChange = onDescriptionChange,
-            label = { Text("Issue description") },
+            label = { Text(stringResource(R.string.report_description_label)) },
             modifier = Modifier.fillMaxWidth(),
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
             keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() })
@@ -142,13 +144,13 @@ fun BugReportScreenContent(
                 checked = uiState.includeLogs, onCheckedChange = onIncludeLogsChange
             )
             Spacer(Modifier.width(8.dp))
-            Text("Include diagnostic logs")
+            Text(stringResource(R.string.report_include_logs))
         }
 
         // Tags Selection Row
         if (uiState.includeLogs) {
             Spacer(Modifier.height(8.dp))
-            Text("Include logs from:", style = MaterialTheme.typography.caption)
+            Text(stringResource(R.string.report_logs_from), style = MaterialTheme.typography.caption)
 
             Row(
                 Modifier
@@ -169,7 +171,7 @@ fun BugReportScreenContent(
                         checked = uiState.includeLibrariesLogs,
                         onCheckedChange = onIncludeLibrariesChange
                     )
-                    Text("Include libraries logs", modifier = Modifier.padding(end = 8.dp))
+                    Text(stringResource(R.string.report_include_libraries), modifier = Modifier.padding(end = 8.dp))
                 }
             }
         }
@@ -189,7 +191,7 @@ fun BugReportScreenContent(
                 onClick = onCopyClick,
                 modifier = Modifier.weight(1f)
             ) {
-                Text("Copy Report")
+                Text(stringResource(R.string.report_copy))
             }
 
             Spacer(Modifier.width(16.dp))
@@ -199,7 +201,7 @@ fun BugReportScreenContent(
                 modifier = Modifier.weight(1f),
                 enabled = uiState.description.isNotBlank() && !uiState.isGenerating
             ) {
-                Text("Submit via GitHub")
+                Text(stringResource(R.string.report_submit))
             }
         }
     }
@@ -217,7 +219,7 @@ private fun ReportPreviewCard(
     ) {
         Column(Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("📋 Report Preview", style = MaterialTheme.typography.subtitle1)
+                Text(stringResource(R.string.report_preview), style = MaterialTheme.typography.subtitle1)
                 if (uiState.isGenerating) {
                     Spacer(Modifier.width(8.dp))
                     CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)

@@ -26,6 +26,8 @@ import io.shipbook.shipbooksdk.ShipBook
 import kotlinx.coroutines.CoroutineScope
 import java.util.Date
 import java.util.UUID
+import com.ethran.notable.R
+import com.ethran.notable.i18n.AppStrings
 
 private val log = ShipBook.getLogger("SelectionState")
 
@@ -75,7 +77,7 @@ class SelectionState {
 
         // Ensure selected images are not null or empty
         if (selectedImagesCopy.isNullOrEmpty()) {
-            showHint("For now, strokes cannot be resized", scope)
+            showHint(AppStrings.get(R.string.hint_strokes_no_resize), scope)
             return
         }
 

@@ -478,12 +478,15 @@ fun ShowImageOption(
     onBackgroundChange: (String, BackgroundType) -> Unit,
     onRequestFilePicker: () -> Unit
 ) {
-    val imageType = when (currentBackgroundType) {
-        BackgroundType.CoverImage -> "Cover "
-        BackgroundType.ImageRepeating -> "Repeating "
-        else -> ""
-    }
-    Text("Choose ${imageType}Image", fontWeight = FontWeight.Bold)
+    Text(
+        stringResource(
+            when (currentBackgroundType) {
+                BackgroundType.CoverImage -> R.string.bg_choose_cover_image
+                BackgroundType.ImageRepeating -> R.string.bg_choose_repeating_image
+                else -> R.string.bg_choose_image
+            }
+        ), fontWeight = FontWeight.Bold
+    )
 
     val baseOptions = listOf(
         Triple("iris", "Iris", painterResource(id = R.drawable.iris)),
@@ -496,7 +499,7 @@ fun ShowImageOption(
         Triple(file.absolutePath, file.nameWithoutExtension, null as Painter?)
     } ?: emptyList()
 
-    val chooseFileOption = listOf(Triple("file", "Choose From File...", null))
+    val chooseFileOption = listOf(Triple("file", stringResource(R.string.bg_choose_from_file), null))
 
     val options = baseOptions + uriOptions + chooseFileOption
 
@@ -595,7 +598,7 @@ fun ShowPdfOption(
         Pair(file.absolutePath, file.nameWithoutExtension)
     } ?: emptyList()
     val pdfOptions = listOf(
-        "file" to "Import PDF"
+        "file" to stringResource(R.string.bg_import_pdf)
     ) + uriOptions
 
     LazyVerticalGrid(

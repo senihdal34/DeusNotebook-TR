@@ -13,6 +13,8 @@ import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.util.Date
+import com.ethran.notable.R
+import com.ethran.notable.i18n.AppStrings
 
 private val log = ShipBook.getLogger("versionChecker")
 
@@ -176,8 +178,7 @@ fun isLatestVersion(context: Context, force: Boolean = false): Boolean {
             isLatestVersion = current.compareTo(latest) != -1
             if (!isLatestVersion!!) {
                 showHint(
-                    "A newer preview version is available!\n" +
-                            "You are using released $current, and newest is from ${latest}.",
+                    AppStrings.get(R.string.update_preview_available, current.toString(), latest.toString()),
                     duration = 5000
                 )
             }
@@ -202,8 +203,7 @@ fun isLatestVersion(context: Context, force: Boolean = false): Boolean {
             isLatestVersion = current.compareTo(latest) != -1
             if (!isLatestVersion!!) {
                 showHint(
-                    "A newer stable version is available!\n" +
-                            "You are using ${current}, while the latest is $latest.",
+                    AppStrings.get(R.string.update_stable_available, current.toString(), latest.toString()),
                     duration = 5000
                 )
             }

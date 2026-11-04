@@ -134,7 +134,7 @@ private fun ClearAllPagesButton(onClearAllPages: (onComplete: () -> Unit) -> Uni
 
     if (isClearing) {
         Text(
-            "Clearing...",
+            stringResource(R.string.settings_clearing),
             style = MaterialTheme.typography.body1,
             color = Color.Gray,
             modifier = Modifier.padding(vertical = 12.dp)
@@ -145,7 +145,7 @@ private fun ClearAllPagesButton(onClearAllPages: (onComplete: () -> Unit) -> Uni
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                "Delete all pages, notebooks, and folders?",
+                stringResource(R.string.settings_delete_all_q),
                 style = MaterialTheme.typography.body1,
                 modifier = Modifier.weight(1f)
             )
@@ -161,7 +161,7 @@ private fun ClearAllPagesButton(onClearAllPages: (onComplete: () -> Unit) -> Uni
                     }
                     .padding(horizontal = 16.dp, vertical = 8.dp)
             ) {
-                Text("Yes, delete all", color = Color.White, fontSize = 14.sp)
+                Text(stringResource(R.string.settings_yes_delete_all), color = Color.White, fontSize = 14.sp)
             }
             Spacer(modifier = Modifier.padding(horizontal = 4.dp))
             Box(
@@ -170,7 +170,7 @@ private fun ClearAllPagesButton(onClearAllPages: (onComplete: () -> Unit) -> Uni
                     .clickable { confirmState = false }
                     .padding(horizontal = 16.dp, vertical = 8.dp)
             ) {
-                Text("Cancel", fontSize = 14.sp)
+                Text(stringResource(R.string.action_cancel), fontSize = 14.sp)
             }
         }
     } else {
@@ -180,7 +180,7 @@ private fun ClearAllPagesButton(onClearAllPages: (onComplete: () -> Unit) -> Uni
                 .clickable { confirmState = true }
                 .padding(horizontal = 16.dp, vertical = 10.dp)
         ) {
-            Text("Clear all pages", color = Color.Red, fontSize = 14.sp)
+            Text(stringResource(R.string.settings_clear_all_pages), color = Color.Red, fontSize = 14.sp)
         }
     }
 }
@@ -200,7 +200,7 @@ private fun InboxCaptureSettings(
             .padding(16.dp)
     ) {
         Text(
-            "Capture",
+            stringResource(R.string.settings_capture_title),
             style = MaterialTheme.typography.h6,
             fontWeight = FontWeight.Bold
         )
@@ -208,8 +208,7 @@ private fun InboxCaptureSettings(
         Spacer(modifier = Modifier.height(4.dp))
 
         Text(
-            "Handwritten captures are recognized and saved as markdown to your Obsidian vault. " +
-                    "Tags are loaded from existing notes in this folder.",
+            stringResource(R.string.settings_capture_description),
             style = MaterialTheme.typography.body2,
             color = Color.Gray
         )
@@ -217,7 +216,7 @@ private fun InboxCaptureSettings(
         Spacer(modifier = Modifier.height(12.dp))
 
         Text(
-            "Vault inbox folder",
+            stringResource(R.string.settings_vault_folder),
             style = MaterialTheme.typography.body1,
             fontWeight = FontWeight.Medium
         )
@@ -250,7 +249,7 @@ private fun InboxCaptureSettings(
         Spacer(modifier = Modifier.height(4.dp))
 
         Text(
-            "Relative to /storage/emulated/0/. Press Done to save.",
+            stringResource(R.string.settings_vault_folder_hint),
             style = MaterialTheme.typography.caption,
             color = Color.Gray
         )

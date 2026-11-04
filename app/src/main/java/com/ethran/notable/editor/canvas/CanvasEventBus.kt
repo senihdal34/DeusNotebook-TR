@@ -13,6 +13,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.system.measureTimeMillis
+import com.ethran.notable.R
+import com.ethran.notable.i18n.AppStrings
 
 object CanvasEventBus {
     val forceUpdate = MutableSharedFlow<Rect?>() // null for full redraw
@@ -83,7 +85,7 @@ object CanvasEventBus {
 
     suspend fun waitForDrawingWithSnack() {
         if (drawingInProgress.isLocked) {
-            val snack = SnackConf(text = "Waiting for drawing to finish…", duration = 60000)
+            val snack = SnackConf(text = AppStrings.get(R.string.snack_waiting_drawing), duration = 60000)
             SnackState.globalSnackFlow.emit(snack)
             waitForDrawing()
             SnackState.cancelGlobalSnack.emit(snack.id)

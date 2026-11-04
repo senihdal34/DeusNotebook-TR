@@ -14,10 +14,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.ethran.notable.R
 
 enum class MainTab { Week, Notes, Pinned, Reading }
 
@@ -25,10 +27,10 @@ enum class MainTab { Week, Notes, Pinned, Reading }
 @Composable
 fun MainTabs(active: MainTab?, onWeek: () -> Unit, onNotes: () -> Unit, onPinned: () -> Unit, onReading: () -> Unit, modifier: Modifier = Modifier) {
     Row(modifier, horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
-        Tab("Planner", active == MainTab.Week, last = false, onClick = onWeek)
-        Tab("Notes", active == MainTab.Notes, last = false, onClick = onNotes)
-        Tab("★ Favorites", active == MainTab.Pinned, last = false, onClick = onPinned)
-        Tab("Reading", active == MainTab.Reading, last = true, onClick = onReading)
+        Tab(stringResource(R.string.tab_planner), active == MainTab.Week, last = false, onClick = onWeek)
+        Tab(stringResource(R.string.tab_notes), active == MainTab.Notes, last = false, onClick = onNotes)
+        Tab(stringResource(R.string.tab_favorites), active == MainTab.Pinned, last = false, onClick = onPinned)
+        Tab(stringResource(R.string.tab_reading), active == MainTab.Reading, last = true, onClick = onReading)
     }
 }
 

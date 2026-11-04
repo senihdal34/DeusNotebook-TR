@@ -22,6 +22,8 @@ import com.ethran.notable.ui.SnackState
 import io.shipbook.shipbooksdk.ShipBook
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import com.ethran.notable.R
+import com.ethran.notable.i18n.AppStrings
 
 //TODO: clean up this code, there is a lot of duplication
 
@@ -260,14 +262,14 @@ suspend fun selectRectangle(page: PageView, coroutineScope: CoroutineScope, stat
             setAnimationMode(false)
             SnackState.globalSnackFlow.emit(
                 SnackConf(
-                    text = "There isn't anything.",
+                    text = AppStrings.get(R.string.snack_nothing_selected),
                     duration = 3000,
                 )
             )
         }
     } else SnackState.globalSnackFlow.emit(
         SnackConf(
-            text = "Page is empty!",
+            text = AppStrings.get(R.string.snack_page_empty),
             duration = 3000,
         )
     )

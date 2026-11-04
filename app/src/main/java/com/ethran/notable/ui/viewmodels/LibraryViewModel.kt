@@ -30,6 +30,8 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import com.ethran.notable.R
+import com.ethran.notable.i18n.AppStrings
 
 data class LibraryUiState(
     val folderId: String? = null,
@@ -166,7 +168,7 @@ class LibraryViewModel @Inject constructor(
     fun onPdfFile(uri: Uri, copy: Boolean) {
         viewModelScope.launch(Dispatchers.IO) {
             val snackText =
-                if (copy) "Importing PDF background (copy)" else "Setting up observer for PDF"
+                AppStrings.get(if (copy) R.string.snack_pdf_importing_copy else R.string.snack_pdf_observer)
 
             _isImporting.value = true
             SnackState.globalSnackFlow.tryEmit(SnackConf(text = snackText, duration = 2000))
@@ -176,9 +178,9 @@ class LibraryViewModel @Inject constructor(
                 importEngine.import(
                     uri, ImportOptions(folderId = _folderId.value, linkToExternalFile = !copy)
                 )
-                SnackState.globalSnackFlow.tryEmit(SnackConf(text = "PDF Import Successful"))
+                SnackState.globalSnackFlow.tryEmit(SnackConf(text = AppStrings.get(R.string.snack_pdf_import_ok)))
             } catch (e: Exception) {
-                SnackState.globalSnackFlow.tryEmit(SnackConf(text = "Import failed: ${e.message}"))
+                SnackState.globalSnackFlow.tryEmit(SnackConf(text = AppStrings.get(R.string.snack_import_failed, e.message ?: "")))
             } finally {
                 _isImporting.value = false
             }
@@ -190,16 +192,16 @@ class LibraryViewModel @Inject constructor(
             _isImporting.value = true
             SnackState.globalSnackFlow.tryEmit(
                 SnackConf(
-                    text = "Importing from xopp file...",
+                    text = AppStrings.get(R.string.snack_xopp_importing),
                     duration = 2000
                 )
             )
 
             try {
                 importEngine.import(uri, ImportOptions(folderId = _folderId.value))
-                SnackState.globalSnackFlow.tryEmit(SnackConf(text = "XOPP Import Successful"))
+                SnackState.globalSnackFlow.tryEmit(SnackConf(text = AppStrings.get(R.string.snack_xopp_import_ok)))
             } catch (e: Exception) {
-                SnackState.globalSnackFlow.tryEmit(SnackConf(text = "Import failed: ${e.message}"))
+                SnackState.globalSnackFlow.tryEmit(SnackConf(text = AppStrings.get(R.string.snack_import_failed, e.message ?: "")))
             } finally {
                 _isImporting.value = false
             }
