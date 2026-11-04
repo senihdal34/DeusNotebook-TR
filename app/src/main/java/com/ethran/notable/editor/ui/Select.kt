@@ -8,6 +8,9 @@ import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.Icon
@@ -59,8 +62,10 @@ fun <T> SelectMenu(options: List<Pair<T, String>>, value: T, onChange: (T) -> Un
             Column(
                 modifier = Modifier
                     .width(IntrinsicSize.Max)
+                    .heightIn(max = 460.dp)
                     .border(0.5.dp, Color.Black, RectangleShape)
                     .background(Color.White)
+                    .verticalScroll(rememberScrollState())
             ) {
                 options.map {
                     Text(

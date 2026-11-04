@@ -41,9 +41,12 @@ import com.ethran.notable.io.VaultTagScanner
 fun GeneralSettings(
     settings: AppSettings,
     onSettingsChange: (AppSettings) -> Unit,
-    onClearAllPages: ((onComplete: () -> Unit) -> Unit)? = null
+    onClearAllPages: ((onComplete: () -> Unit) -> Unit)? = null,
+    onAppLanguageChange: (com.ethran.notable.i18n.AppLanguage) -> Unit = {}
 ) {
     Column {
+        LanguageSettings(onAppLanguageChange)
+
         // Capture settings
         InboxCaptureSettings(settings, onSettingsChange)
 

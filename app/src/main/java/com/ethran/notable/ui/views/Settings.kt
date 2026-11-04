@@ -102,6 +102,9 @@ fun SettingsView(
         },
         onUpdateSettings = { viewModel.updateSettings(it) },
         onClearAllPages = { onComplete -> viewModel.clearAllPages(onComplete) },
+        onAppLanguageChange = { language ->
+            viewModel.setAppLanguage(context, language) { (context as? android.app.Activity)?.recreate() }
+        },
         listOfGestures = viewModel.getGestureRows(),
         availableGestures = viewModel.availableGestures
     )
@@ -118,6 +121,7 @@ fun SettingsContent(
     onCheckUpdate: (Boolean) -> Unit,
     onUpdateSettings: (AppSettings) -> Unit,
     onClearAllPages: ((onComplete: () -> Unit) -> Unit)? = null,
+    onAppLanguageChange: (com.ethran.notable.i18n.AppLanguage) -> Unit = {},
     selectedTabInitial: Int = 0,
     listOfGestures: List<GestureRowModel> = emptyList(),
     availableGestures: List<Pair<AppSettings.GestureAction?, Any>> = emptyList()
@@ -150,7 +154,7 @@ fun SettingsContent(
                     .verticalScroll(rememberScrollState())
             ) {
                 when (selectedTab) {
-                    0 -> GeneralSettings(settings, onUpdateSettings, onClearAllPages)
+                    0 -> GeneralSettings(settings, onUpdateSettings, onClearAllPages, onAppLanguageChange)
                     1 -> GesturesSettings(
                         settings, onUpdateSettings, listOfGestures, availableGestures
                     )

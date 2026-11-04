@@ -32,6 +32,7 @@ data class GestureRowModel(
 class SettingsViewModel @Inject constructor(
     private val kvProxy: KvProxy,
     private val db: AppDatabase,
+    private val plannerService: com.ethran.notable.planner.PlannerService,
 ) : ViewModel() {
     companion object {}
 
@@ -67,6 +68,18 @@ class SettingsViewModel @Inject constructor(
         // 2. Persist to DB in the background
         viewModelScope.launch(Dispatchers.IO) {
             kvProxy.setKv(APP_SETTINGS_KEY, newSettings, AppSettings.serializer())
+        }
+    }
+
+    /**
+     * Saves the app language, renames the planner notebook and its pages to it (titles only, nothing written is
+     * touched), then calls [onDone] so the screen is rebuilt in the new language.
+     */
+    fun setAppLanguage(context: Context, language: com.ethran.notable.i18n.AppLanguage, onDone: () -> Unit) {
+        com.ethran.notable.i18n.LanguagePrefs.setApp(context, language)
+        viewModelScope.launch(Dispatchers.IO) {
+            runCatching { plannerService.relocalize() }
+            withContext(Dispatchers.Main) { onDone() }
         }
     }
 

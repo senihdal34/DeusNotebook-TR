@@ -44,6 +44,8 @@ object AppStrings {
 
     val locale: Locale get() = app?.let { Localization.locale(it) } ?: Locale.ENGLISH
 
+    val language: AppLanguage get() = app?.let { LanguagePrefs.app(it) } ?: AppLanguage.Default
+
     fun get(@StringRes id: Int, vararg args: Any): String {
         val ctx = localized() ?: return ""
         return if (args.isEmpty()) ctx.getString(id) else ctx.getString(id, *args)

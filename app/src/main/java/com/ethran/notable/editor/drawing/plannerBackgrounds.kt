@@ -14,7 +14,8 @@ import java.time.LocalDate
 // All sizes are in page pixels (device pixels at zoom 1); the screen is about 1860 x 2480.
 
 private const val HEADER_H = 150f
-private val TR = java.util.Locale("tr", "TR")
+private val loc get() = com.ethran.notable.i18n.AppStrings.locale
+private fun text(@androidx.annotation.StringRes id: Int, vararg args: Any) = com.ethran.notable.i18n.AppStrings.get(id, *args)
 
 private val serifBold = Typeface.create(Typeface.SERIF, Typeface.BOLD)
 private val sansBold = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
@@ -86,7 +87,7 @@ private fun drawHeader(
     val right = w - PlannerLayout.RIGHT_MARGIN
     canvas.drawText(line1, right, 48f + oy, summary)
     canvas.drawText(line2, right, 80f + oy, summary)
-    canvas.drawText("YIL %$percent TAMAMLANDI", right, 112f + oy, summary)
+    canvas.drawText(text(com.ethran.notable.R.string.planner_year_complete, percent).uppercase(loc), right, 112f + oy, summary)
     val barW = 280f
     canvas.drawRect(right - barW, 122f + oy, right, 132f + oy, box)
     canvas.drawRect(right - barW, 122f + oy, right - barW + barW * percent / 100f, 132f + oy, fillInk)
@@ -105,8 +106,8 @@ fun drawPlannerWeekBg(
     val h = canvas.height / scale
     canvas.drawColor(Color.WHITE)
     drawHeader(
-        context, canvas, w, 0f, "Weekly Planner",
-        "HAFTA ${PlannerWeeks.weekOfYear(monday)}", "${PlannerWeeks.rangeLabel(monday)} · ${monday.plusDays(3).year}".uppercase(TR),
+        context, canvas, w, 0f, text(com.ethran.notable.R.string.planner_title),
+        text(com.ethran.notable.R.string.planner_week_title, PlannerWeeks.weekOfYear(monday)).uppercase(loc), "${PlannerWeeks.rangeLabel(monday)} · ${monday.plusDays(3).year}".uppercase(loc),
         PlannerWeeks.yearPercent(today)
     )
     val layout = PlannerLayout.week(h)
@@ -126,9 +127,9 @@ fun drawPlannerWeekBg(
 
 private fun drawDayLabel(canvas: Canvas, labelW: Float, y0: Float, rowH: Float, day: LocalDate, idx: Int, isToday: Boolean) {
     if (isToday) canvas.drawRect(0f, y0, labelW, y0 + rowH, fillInk)
-    canvas.drawText(PlannerWeeks.DAY_NAMES[idx].uppercase(TR), labelW / 2f, y0 + rowH * 0.26f, if (isToday) dayNameInv else dayName)
+    canvas.drawText(PlannerWeeks.dayName(idx).uppercase(loc), labelW / 2f, y0 + rowH * 0.26f, if (isToday) dayNameInv else dayName)
     canvas.drawText(day.dayOfMonth.toString(), labelW / 2f, y0 + rowH * 0.66f, if (isToday) dayNumInv else dayNum)
-    canvas.drawText(PlannerWeeks.monthName(day).uppercase(TR), labelW / 2f, y0 + rowH * 0.9f, if (isToday) dayNameInv else dayName)
+    canvas.drawText(PlannerWeeks.monthName(day).uppercase(loc), labelW / 2f, y0 + rowH * 0.9f, if (isToday) dayNameInv else dayName)
 }
 
 /**
@@ -143,8 +144,8 @@ fun drawPlannerDayBg(
     canvas.drawColor(Color.WHITE)
     val idx = day.dayOfWeek.value - 1
     drawHeader(
-        context, canvas, w, 0f, PlannerWeeks.DAY_FULL[idx],
-        "${day.dayOfMonth} ${PlannerWeeks.monthName(day)}".uppercase(TR), "HAFTA ${PlannerWeeks.weekOfYear(PlannerWeeks.mondayOf(day))} · ${day.year}",
+        context, canvas, w, 0f, PlannerWeeks.dayFull(idx),
+        PlannerWeeks.shortDate(day).uppercase(loc), "${text(com.ethran.notable.R.string.planner_week_title, PlannerWeeks.weekOfYear(PlannerWeeks.mondayOf(day))).uppercase(loc)} · ${day.year}",
         PlannerWeeks.yearPercent(today), withLogo = false
     )
     val layout = PlannerLayout.week(h)
@@ -164,8 +165,8 @@ fun drawPlannerTodoBg(canvas: Canvas, scroll: Offset, scale: Float, monday: Loca
     canvas.drawColor(Color.WHITE)
     val oy = -scroll.y
 
-    canvas.drawText("Yapılacaklar", 60f, 100f + oy, titleP)
-    canvas.drawText("${PlannerWeeks.weekNumber(monday)}. HAFTA", w - 60f, 98f + oy, subP)
+    canvas.drawText(text(com.ethran.notable.R.string.planner_todo), 60f, 100f + oy, titleP)
+    canvas.drawText(text(com.ethran.notable.R.string.planner_week_title, PlannerWeeks.weekNumber(monday)).uppercase(loc), w - 60f, 98f + oy, subP)
     canvas.drawRect(0f, HEADER_H - 8f + oy, w, HEADER_H + oy, fillInk)
 
     val step = 112f
@@ -180,7 +181,7 @@ fun drawPlannerTodoBg(canvas: Canvas, scroll: Offset, scale: Float, monday: Loca
 
     val notesTop = listEnd + 90f
     canvas.drawRect(0f, notesTop - 62f, w, notesTop - 54f, fillInk)
-    canvas.drawText("Notlar", 60f, notesTop, sectionP)
+    canvas.drawText(text(com.ethran.notable.R.string.planner_notes), 60f, notesTop, sectionP)
     var y = notesTop + 80f
     while (y < h + 80f) { canvas.drawLine(60f, y, w - 40f, y, guide); y += 80f }
 }
