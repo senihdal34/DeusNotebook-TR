@@ -17,6 +17,7 @@ import com.ethran.notable.R
 import com.ethran.notable.i18n.AppLanguage
 import com.ethran.notable.i18n.LanguagePrefs
 import com.ethran.notable.i18n.WritingLanguage
+import com.ethran.notable.i18n.WritingLanguageAvailability
 import com.ethran.notable.io.OnyxHWREngine
 
 /**
@@ -40,9 +41,17 @@ fun LanguageSettings(onAppLanguageChange: (AppLanguage) -> Unit) {
             }
         }
     )
+    val installed = remember { WritingLanguageAvailability.installed() }
+    val notInstalled = stringResource(R.string.writing_language_not_installed)
+    val ordered = remember(installed) {
+        // Languages the tablet can recognize first, the rest after them.
+        WritingLanguage.all.sortedBy { if (WritingLanguageAvailability.isAvailable(it.code, installed)) 0 else 1 }
+    }
     SelectorRow(
         label = stringResource(R.string.writing_language),
-        options = WritingLanguage.all.map { it to it.nativeName },
+        options = ordered.map {
+            it to if (WritingLanguageAvailability.isAvailable(it.code, installed)) it.nativeName else "${it.nativeName} ($notInstalled)"
+        },
         value = writing,
         onValueChange = { chosen ->
             writing = chosen
@@ -50,8 +59,10 @@ fun LanguageSettings(onAppLanguageChange: (AppLanguage) -> Unit) {
             OnyxHWREngine.setLanguage(chosen.code)
         }
     )
+    val missing = !WritingLanguageAvailability.isAvailable(writing.code, installed)
     Text(
-        text = stringResource(R.string.writing_language_hint),
+        text = if (missing) stringResource(R.string.writing_language_missing_hint, writing.nativeName)
+        else stringResource(R.string.writing_language_hint),
         style = MaterialTheme.typography.body2,
         fontSize = 13.sp,
         color = MaterialTheme.colors.onSurface.copy(alpha = 0.7f),

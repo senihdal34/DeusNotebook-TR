@@ -94,10 +94,16 @@ object OnyxHWREngine {
     @Volatile var language: String = com.ethran.notable.i18n.WritingLanguage.DEFAULT_CODE
         private set
 
+    /** What the recognizer is really given: [language] when its resources are on the tablet, else English. */
+    @Volatile var effectiveLanguage: String = com.ethran.notable.i18n.WritingLanguage.DEFAULT_CODE
+        private set
+
     /** Switches the recognizer language; the next recognition re-initializes the engine with it. */
     fun setLanguage(code: String) {
-        if (code == language) return
+        val effective = com.ethran.notable.i18n.WritingLanguageAvailability.effective(code)
+        if (code == language && effective == effectiveLanguage) return
         language = code
+        effectiveLanguage = effective
         initialized = false
     }
 
@@ -109,10 +115,10 @@ object OnyxHWREngine {
      */
     private suspend fun ensureInitialized(svc: IHWRService, viewWidth: Float, viewHeight: Float) {
         if (initialized) return
-        log.i("Initializing OnyxHWR recognizer (lang=$language)...")
+        log.i("Initializing OnyxHWR recognizer (lang=$effectiveLanguage, chosen=$language)...")
 
         val inputArgs = HWRInputArgs().apply {
-            lang = language
+            lang = effectiveLanguage
             contentType = "Text"
             recognizerType = "MS_ON_SCREEN"
             this.viewWidth = viewWidth
@@ -360,7 +366,7 @@ object OnyxHWREngine {
 
         // Field 1: lang (string)
         writeTag(out, 1, 2)
-        writeString(out, "tr_TR")
+        writeString(out, effectiveLanguage)
 
         // Field 2: contentType (string)
         writeTag(out, 2, 2)

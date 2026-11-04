@@ -16,4 +16,6 @@
     <string name="planner_next_day">Día siguiente ›</string>
     <string name="planner_week_button">Semana</string>
     <string name="planner_back">‹ Planificador</string>
+    <string name="writing_language_not_installed">no instalado</string>
+    <string name="writing_language_missing_hint">La escritura en %1$s no está instalada en esta tableta, así que se usa inglés. Añádela en Boox Notes (idioma de reconocimiento de escritura) para usarla.</string>
 </resources>
