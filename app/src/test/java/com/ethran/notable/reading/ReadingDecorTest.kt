@@ -7,6 +7,8 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class ReadingDecorTest {
+    init { EnglishStrings.install() }   // the logic speaks the app language; the test reads the English file
+
     private fun pose(
         reading: Boolean = true, streak: Int = 3, best: Int = 10, today: Int = 20, finished: Boolean = false, hour: Int = 14
     ) = ReadingDecor.buddyPose(reading, streak, best, today, finished, hour)

@@ -2,8 +2,7 @@ package com.ethran.notable.reading
 
 import java.time.LocalDate
 import java.time.ZoneId
-import java.time.format.TextStyle
-import java.util.Locale
+import com.ethran.notable.R
 import kotlin.math.ceil
 
 /** One heatmap cell is one day: its minutes, or null when the day has not come yet. */
@@ -74,7 +73,7 @@ object ReadingInsights {
                 }
             }
             // The month of the week's Sunday names the column; a label only where it changes.
-            labels += if (start.monthValue != prevMonth) start.month.getDisplayName(TextStyle.SHORT, Locale.ENGLISH) else null
+            labels += if (start.monthValue != prevMonth) ReadingDates.monthAlone(start.month, full = false) else null
             prevMonth = start.monthValue
         }
         // Two labels side by side would collide: the later one wins.
@@ -99,8 +98,8 @@ object ReadingInsights {
 
     /** "Tomorrow" or "Saturday, 7 Nov". */
     fun finishLabel(f: Forecast): String =
-        if (f.daysOut <= 1) "Tomorrow"
-        else "${f.date.dayOfWeek.getDisplayName(TextStyle.FULL, Locale.ENGLISH)}, ${f.date.dayOfMonth} ${f.date.month.getDisplayName(TextStyle.SHORT, Locale.ENGLISH)}"
+        if (f.daysOut <= 1) RS.get(R.string.reading_tomorrow)
+        else ReadingDates.weekdayDayMonth(f.date, fullWeekday = true)
 
     fun hours(minutesByDay: Map<Long, Int>, today: LocalDate): HoursRead {
         var year = 0
@@ -111,7 +110,7 @@ object ReadingInsights {
             year += m
             if (d.monthValue == today.monthValue) month += m
         }
-        return HoursRead(year, month, today.year, today.month.getDisplayName(TextStyle.FULL, Locale.ENGLISH))
+        return HoursRead(year, month, today.year, ReadingDates.monthAlone(today.month))
     }
 
     /** The longest run of consecutive days with some reading in [minutesByDay]. */
@@ -157,9 +156,8 @@ object ReadingInsights {
     fun minutesOn(data: ReadingData, day: LocalDate): Int = data.minutesByDay[day.toEpochDay()] ?: 0
 
     /** "6 May 2026". */
-    fun shortDate(d: LocalDate): String = "${d.dayOfMonth} ${d.month.getDisplayName(TextStyle.SHORT, Locale.ENGLISH)} ${d.year}"
+    fun shortDate(d: LocalDate): String = ReadingDates.dayMonthYear(d)
 
     /** Day name shown in the year-ago box: "Sat, 31 Oct 2025". */
-    fun dateLabel(d: LocalDate): String =
-        "${d.dayOfWeek.getDisplayName(TextStyle.SHORT, Locale.ENGLISH)}, ${d.dayOfMonth} ${d.month.getDisplayName(TextStyle.SHORT, Locale.ENGLISH)} ${d.year}"
+    fun dateLabel(d: LocalDate): String = ReadingDates.weekdayDayMonthYear(d)
 }

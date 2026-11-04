@@ -1,5 +1,6 @@
 package com.ethran.notable.reading
 
+import com.ethran.notable.R
 import java.time.LocalDate
 import kotlin.math.PI
 import kotlin.math.abs
@@ -37,13 +38,13 @@ object ReadingDecor {
 
     /** What the buddy says: a headline and a second line. */
     fun buddyLines(pose: BuddyPose, streak: Int, longestStreak: Int, todayMinutes: Int): Pair<String, String> = when (pose) {
-        BuddyPose.Read -> "Reading with you" to "${ReadingText.minutes(todayMinutes)} today"
-        BuddyPose.Sleep -> "Fast asleep" to "Wakes up when you read"
-        BuddyPose.Party -> "$streak ${if (streak == 1) "day" else "days"} in a row!" to
-            (if (streak >= longestStreak) "A new best" else "Your best is $longestStreak")
-        BuddyPose.Ribbon -> "Book finished!" to "Well read"
-        BuddyPose.Yawn -> "Past bedtime" to "${ReadingText.minutes(todayMinutes)} read today"
-        BuddyPose.Wait -> "Ready when you are" to "Open a book to start"
+        BuddyPose.Read -> RS.get(R.string.reading_buddy_read_title) to RS.get(R.string.reading_buddy_read_sub, ReadingText.minutes(todayMinutes))
+        BuddyPose.Sleep -> RS.get(R.string.reading_buddy_sleep_title) to RS.get(R.string.reading_buddy_sleep_sub)
+        BuddyPose.Party -> RS.plural(R.plurals.reading_buddy_streak, streak, streak) to
+            (if (streak >= longestStreak) RS.get(R.string.reading_buddy_new_best) else RS.get(R.string.reading_buddy_your_best, longestStreak))
+        BuddyPose.Ribbon -> RS.get(R.string.reading_buddy_ribbon_title) to RS.get(R.string.reading_buddy_ribbon_sub)
+        BuddyPose.Yawn -> RS.get(R.string.reading_buddy_yawn_title) to RS.get(R.string.reading_buddy_yawn_sub, ReadingText.minutes(todayMinutes))
+        BuddyPose.Wait -> RS.get(R.string.reading_buddy_wait_title) to RS.get(R.string.reading_buddy_wait_sub)
     }
 
     const val SPRITE_COLS = 14
@@ -104,19 +105,19 @@ object ReadingDecor {
         val phase = age / SYNODIC_DAYS
         val lit = ((1 - cos(2 * PI * phase)) / 2 * 100).roundToInt()
         val name = when {
-            phase < 0.03 || phase >= 0.97 -> "New moon"
-            phase < 0.22 -> "Waxing crescent"
-            phase < 0.28 -> "First quarter"
-            phase < 0.47 -> "Waxing gibbous"
-            phase < 0.53 -> "Full moon"
-            phase < 0.72 -> "Waning gibbous"
-            phase < 0.78 -> "Last quarter"
-            else -> "Waning crescent"
+            phase < 0.03 || phase >= 0.97 -> RS.get(R.string.reading_moon_new)
+            phase < 0.22 -> RS.get(R.string.reading_moon_waxing_crescent)
+            phase < 0.28 -> RS.get(R.string.reading_moon_first_quarter)
+            phase < 0.47 -> RS.get(R.string.reading_moon_waxing_gibbous)
+            phase < 0.53 -> RS.get(R.string.reading_moon_full)
+            phase < 0.72 -> RS.get(R.string.reading_moon_waning_gibbous)
+            phase < 0.78 -> RS.get(R.string.reading_moon_last_quarter)
+            else -> RS.get(R.string.reading_moon_waning_crescent)
         }
         // Next full moon while waxing, next new moon while waning.
-        val (target, label) = if (phase < 0.5) 0.5 to "Full moon" else 1.0 to "New moon"
+        val (target, label) = if (phase < 0.5) 0.5 to RS.get(R.string.reading_moon_full) else 1.0 to RS.get(R.string.reading_moon_new)
         val days = floor((target - phase) * SYNODIC_DAYS + 0.999).toInt().coerceAtLeast(0)
-        return MoonPhase(phase, lit, name, days, if (days == 0) "$label today" else "$label in $days ${if (days == 1) "day" else "days"}")
+        return MoonPhase(phase, lit, name, days, if (days == 0) RS.get(R.string.reading_moon_today, label) else RS.plural(R.plurals.reading_moon_in_days, days, label, days))
     }
 
     /** Hour hand moves with the minutes; both are measured clockwise from 12. */

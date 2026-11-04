@@ -1,17 +1,18 @@
 package com.ethran.notable.reading.board
 
+import com.ethran.notable.R
 import com.ethran.notable.reading.Forecast
 import com.ethran.notable.reading.MoonPhase
 import com.ethran.notable.reading.RBook
+import com.ethran.notable.reading.RS
 import com.ethran.notable.reading.ReadingData
+import com.ethran.notable.reading.ReadingDates
 import com.ethran.notable.reading.ReadingInsights
 import com.ethran.notable.reading.chapters.ChapterLine
 import com.ethran.notable.reading.chapters.ChapterLines
 import com.ethran.notable.reading.chapters.ChapterState
 import java.time.LocalDate
 import java.time.ZoneId
-import java.time.format.TextStyle
-import java.util.Locale
 import kotlin.math.PI
 import kotlin.math.ceil
 import kotlin.math.cos
@@ -38,7 +39,7 @@ class BoardData(
      */
     val week: List<Int> = if (data.weekDates.size == 7 && data.weekMinutes.size == 7) data.weekMinutes else (6 downTo 0).map { minutesOn(today.minusDays(it.toLong())) }
     private val weekDates: List<LocalDate> = if (data.weekDates.size == 7) data.weekDates else (6 downTo 0).map { today.minusDays(it.toLong()) }
-    val weekInitials: List<String> = weekDates.map { it.dayOfWeek.getDisplayName(TextStyle.SHORT, Locale.ENGLISH).take(1) }
+    val weekInitials: List<String> = weekDates.map { ReadingDates.weekdayInitial(it.dayOfWeek) }
     val weekMinutes: Int = week.sum()
 
     /** Whether something was read on each of the last 7 days, today last (the Streak box). */
@@ -140,6 +141,13 @@ class BoardData(
         else -> emptyList()
     }
 
+    /** The eight named phases of [moon], by age. */
+    private enum class Moon(@androidx.annotation.StringRes val res: Int) {
+        New(R.string.reading_moon_new), WaxingCrescent(R.string.reading_moon_waxing_crescent), FirstQuarter(R.string.reading_moon_first_quarter),
+        WaxingGibbous(R.string.reading_moon_waxing_gibbous), Full(R.string.reading_moon_full), WaningGibbous(R.string.reading_moon_waning_gibbous),
+        LastQuarter(R.string.reading_moon_last_quarter), WaningCrescent(R.string.reading_moon_waning_crescent)
+    }
+
     companion object {
         private const val SYNODIC = 29.530588853
         /** 2000-01-06 18:14 UTC, a known new moon, in epoch seconds. */
@@ -155,39 +163,39 @@ class BoardData(
             val p = age / SYNODIC
             val lit = (1 - cos(2 * PI * p)) / 2
             val name = when {
-                age < 1.0 || age > 28.5 -> "New moon"
-                age < 6.4 -> "Waxing crescent"
-                age < 8.4 -> "First quarter"
-                age < 13.8 -> "Waxing gibbous"
-                age < 15.8 -> "Full moon"
-                age < 21.1 -> "Waning gibbous"
-                age < 23.1 -> "Last quarter"
-                else -> "Waning crescent"
+                age < 1.0 || age > 28.5 -> Moon.New
+                age < 6.4 -> Moon.WaxingCrescent
+                age < 8.4 -> Moon.FirstQuarter
+                age < 13.8 -> Moon.WaxingGibbous
+                age < 15.8 -> Moon.Full
+                age < 21.1 -> Moon.WaningGibbous
+                age < 23.1 -> Moon.LastQuarter
+                else -> Moon.WaningCrescent
             }
             val toFull = (((SYNODIC / 2 - age) % SYNODIC) + SYNODIC) % SYNODIC
             val toNew = SYNODIC - age
-            val nextFull = when (name) { "New moon" -> true; "Full moon" -> false; else -> toFull < toNew }
+            val nextFull = when (name) { Moon.New -> true; Moon.Full -> false; else -> toFull < toNew }
             val inDays = if (nextFull) toFull else toNew
             val d = java.time.Instant.ofEpochMilli(nowMs + (inDays * 86400_000).toLong()).atZone(zone).toLocalDate()
-            val next = "${if (nextFull) "Full moon" else "New moon"} ${d.dayOfWeek.getDisplayName(TextStyle.SHORT, Locale.ENGLISH)} ${d.dayOfMonth} ${d.month.getDisplayName(TextStyle.SHORT, Locale.ENGLISH)}"
-            return MoonPhase(p, Math.round(lit * 100).toInt(), name, ceil(inDays).toInt(), next)
+            val next = RS.get(R.string.reading_moon_on, RS.get(if (nextFull) R.string.reading_moon_full else R.string.reading_moon_new), ReadingDates.weekdayDayMonthPlain(d))
+            return MoonPhase(p, Math.round(lit * 100).toInt(), RS.get(name.res), ceil(inDays).toInt(), next)
         }
 
         /** "1 min", "45 min", "1 h 20 min", "2 h" (BoardData.formatDuration). */
         fun duration(min: Int): String {
             val m = min
-            if (m < 60) return "$m min"
+            if (m < 60) return RS.get(R.string.reading_duration_min, m)
             val h = m / 60
             val r = m % 60
-            return if (r == 0) "$h h" else "$h h $r min"
+            return if (r == 0) RS.get(R.string.reading_duration_h, h) else RS.get(R.string.reading_duration_h_min, h, r)
         }
 
         /** "45m", "1h 20m", "2h" (BoardData.formatShortDuration). */
         fun shortDuration(min: Int): String {
-            if (min < 60) return "${min}m"
+            if (min < 60) return RS.get(R.string.reading_min_short, min)
             val h = min / 60
             val r = min % 60
-            return if (r == 0) "${h}h" else "${h}h ${r}m"
+            return if (r == 0) RS.get(R.string.reading_hour_short, h) else RS.get(R.string.reading_hour_min_short, h, r)
         }
 
         /** The percentage a book shows: a started book never reads 0%, an unfinished one never 100% (BoardData.pctLabel). */
@@ -198,14 +206,14 @@ class BoardData(
         }
 
         /** 1,234 style grouping. */
-        fun count(n: Int): String = "%,d".format(Locale.ENGLISH, n)
+        fun count(n: Int): String = RS.count(n)
 
         fun fillSize(room: Int, dp: Double, lo: Int, hi: Int): Int = floor(room / 1.36 / dp).toInt().coerceIn(lo, hi)
 
         /** "Early/Mid/Late September 2025" for a date (BoardData.partOfMonth). */
         fun partOfMonth(d: LocalDate): String {
-            val part = if (d.dayOfMonth <= 10) "Early" else if (d.dayOfMonth <= 20) "Mid" else "Late"
-            return "$part ${d.month.getDisplayName(TextStyle.FULL, Locale.ENGLISH)} ${d.year}"
+            val part = if (d.dayOfMonth <= 10) R.string.reading_part_early else if (d.dayOfMonth <= 20) R.string.reading_part_mid else R.string.reading_part_late
+            return RS.get(part, ReadingDates.month(d.month, full = true), d.year)
         }
     }
 }

@@ -18,10 +18,13 @@ import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Constraints
+import com.ethran.notable.R
 import com.ethran.notable.reading.RBook
 import com.ethran.notable.reading.chapters.ChapterLayout
 import com.ethran.notable.reading.chapters.ChapterLine
@@ -54,16 +57,16 @@ fun ChaptersWidget(c: BoardCtx, w: Int, hh: Int) {
     val line = c.d.chapterLine
     val icon: @Composable () -> Unit = { Ic("train-front", 17, lineCol, iconSw(2.25f)) }
     when {
-        book == null -> ChapterHint(w, hh, icon, "Open a book and its chapters line up here.", "Open a book to start.")
+        book == null -> ChapterHint(w, hh, icon, stringResource(R.string.reading_chapters_none_hint), stringResource(R.string.reading_chapters_none_short))
         line != null -> NextStopBox(c, book, line, w, hh, lineCol, aheadCol, icon, bx)
         state is ChapterState.Empty -> when (state.reason) {
-            NoChapters.NoOutline -> ChapterHint(w, hh, icon, "This book has no table of contents to follow.", "No table of contents.")
-            NoChapters.UnsupportedFormat -> ChapterHint(w, hh, icon, "Chapters can only be read from PDF and EPUB books.", "No chapters for this format.")
-            NoChapters.Unreadable -> ChapterHint(w, hh, icon, "The chapter list could not be read from this file.", "Chapters not readable.")
+            NoChapters.NoOutline -> ChapterHint(w, hh, icon, stringResource(R.string.reading_chapters_no_toc_hint), stringResource(R.string.reading_chapters_no_toc_short))
+            NoChapters.UnsupportedFormat -> ChapterHint(w, hh, icon, stringResource(R.string.reading_chapters_format_hint), stringResource(R.string.reading_chapters_format_short))
+            NoChapters.Unreadable -> ChapterHint(w, hh, icon, stringResource(R.string.reading_chapters_unreadable_hint), stringResource(R.string.reading_chapters_unreadable_short))
         }
         // Read, but a contents list too short to draw a line from (fewer than two usable chapters).
-        state is ChapterState.Ready && state.bookId == book.id -> ChapterHint(w, hh, icon, "This book has too few chapters to draw a line.", "Too few chapters.")
-        else -> ChapterHint(w, hh, icon, "Looking up the chapters of this book.", "Looking up chapters.")
+        state is ChapterState.Ready && state.bookId == book.id -> ChapterHint(w, hh, icon, stringResource(R.string.reading_chapters_few_hint), stringResource(R.string.reading_chapters_few_short))
+        else -> ChapterHint(w, hh, icon, stringResource(R.string.reading_chapters_loading_hint), stringResource(R.string.reading_chapters_loading_short))
     }
 }
 
@@ -82,7 +85,7 @@ private fun ChapterHint(w: Int, hh: Int, right: @Composable () -> Unit, hint: St
         lines <= v.maxLines && (if (v.head) bx.lh1(13) + bx.px(6) else 0) + lines * bx.lh(v.s) <= ih
     } ?: variants.last()
     WPad(w, hh, pad) {
-        if (v.head) { BHead(iw, "Next stop", right); VGap(bx.px(6)) }
+        if (v.head) { BHead(iw, stringResource(R.string.reading_next_stop), right); VGap(bx.px(6)) }
         BText(v.text, v.s, color = Ink.g4, lines = v.maxLines, w = iw)
     }
 }
@@ -104,15 +107,15 @@ private fun NextStopBox(
     val whenText = (if (line.atLastStop) line.minutesLeft?.let { BoardData.duration(it) } else line.minutesToNext?.let { tilde + BoardData.duration(it) })
         ?: BoardData.pctLabel(book.progress)
     val stopsLeft = line.stopsLeft
-    val head = if (line.atLastStop) "Last stop" else "Next stop"
+    val head = stringResource(if (line.atLastStop) R.string.reading_last_stop else R.string.reading_next_stop)
     val nextTitle = line.stops[line.next].title
 
     // "End of book in 3 h 20 min" (or how many stops to go when there is no pace yet).
     @Composable
     fun EndRuns(s: Double) {
         val left = line.minutesLeft
-        if (left == null) BText(if (stopsLeft == 1) "1 stop to the end" else "$stopsLeft stops to the end", s, color = Ink.g4)
-        else BRuns(listOf(Run("End of book in "), Run(BoardData.duration(left), b = true, color = Ink.black)), s, color = Ink.g4)
+        if (left == null) BText(pluralStringResource(R.plurals.reading_stops_to_end, stopsLeft, stopsLeft), s, color = Ink.g4)
+        else BRuns(argRuns(stringResource(R.string.reading_end_of_book_in, BoardData.duration(left)), BoardData.duration(left), Ink.black), s, color = Ink.g4)
     }
 
     when (plan) {
@@ -137,7 +140,7 @@ private fun NextStopBox(
                     EndRuns(12.0)
                     Flex()
                     HGap(bx.px(4))
-                    BText(if (stopsLeft == 1) "1 stop" else "$stopsLeft stops", 12.0, color = Ink.g4)
+                    BText(pluralStringResource(R.plurals.reading_stops, stopsLeft, stopsLeft), 12.0, color = Ink.g4)
                 }
             }
         }
@@ -185,6 +188,7 @@ private fun DrawScope.station(cx: Float, cy: Float, r: Float, filled: Boolean, l
 private fun LineArt(iw: Int, line: ChapterLine, labels: Boolean, maxLabels: Int, lineCol: Color, aheadCol: Color) {
     val bx = LocalBx.current
     val measurer = rememberMeasurer()
+    val endText = stringResource(R.string.reading_end)
     val count = line.stops.size
     val lw = max(3, bx.px(4)).toFloat()
     val r = bx.px(4).toFloat()
@@ -202,7 +206,7 @@ private fun LineArt(iw: Int, line: ChapterLine, labels: Boolean, maxLabels: Int,
             ChapterLayout.placeLabels(
                 line, iw, maxLabels, bx.px(8), { xi(it).toDouble() },
                 { i -> textW(measurer, if (i == line.next) bold else regular, ChapterLayout.labelText(line, i, BoardData::shortDuration)) },
-                textW(measurer, bold, "End")
+                textW(measurer, bold, endText)
             )
         }
     }
@@ -218,7 +222,7 @@ private fun LineArt(iw: Int, line: ChapterLine, labels: Boolean, maxLabels: Int,
             tram(trainX, trackY, bx)
         }
         for (p in placed) {
-            val text = if (p.index == ChapterLayout.END_LABEL) "End" else ChapterLayout.labelText(line, p.index, BoardData::shortDuration)
+            val text = if (p.index == ChapterLayout.END_LABEL) endText else ChapterLayout.labelText(line, p.index, BoardData::shortDuration)
             BText(text, 11.0, bold = p.bold, color = if (p.bold) Ink.black else Ink.g4, modifier = Modifier.offset(bx.d(p.x), bx.d(rowY)))
         }
     }
@@ -229,6 +233,7 @@ private fun LineArt(iw: Int, line: ChapterLine, labels: Boolean, maxLabels: Int,
 private fun Timetable(w: Int, line: ChapterLine, rows: Int, lineCol: Color, aheadCol: Color, tilde: String) {
     val bx = LocalBx.current
     val measurer = rememberMeasurer()
+    val nowText = stringResource(R.string.reading_now)
     val table = remember(line.signature, rows) { ChapterLayout.timetableRows(line, rows) }
     val list = table.indices
     val rowH = bx.lh1(14) + bx.px(6)
@@ -264,7 +269,7 @@ private fun Timetable(w: Int, line: ChapterLine, rows: Int, lineCol: Color, ahea
         }
         for ((k, i) in list.withIndex()) {
             val m = line.minutes(i)
-            val right = if (k == 0) "now" else m?.let { tilde + BoardData.duration(it) } ?: ""
+            val right = if (k == 0) nowText else m?.let { tilde + BoardData.duration(it) } ?: ""
             val rw = textW(measurer, boardStyle(bx, 13.0, bold = k == 1), right)
             val nw = w - nameX - rw - bx.px(8)
             val y = Math.round(cy(k) - bx.lh1(14) / 2f)

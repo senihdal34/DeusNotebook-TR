@@ -22,18 +22,21 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextAlign
+import com.ethran.notable.R
+import com.ethran.notable.reading.RS
+import com.ethran.notable.reading.ReadingDates
 import com.ethran.notable.reading.ReadingWords
+import java.time.DayOfWeek
 import java.time.LocalDate
-import java.time.format.TextStyle
-import java.util.Locale
 import kotlin.math.floor
 import kotlin.math.max
 import kotlin.math.min
 
-private fun shortMonth(d: LocalDate) = d.month.getDisplayName(TextStyle.SHORT, Locale.ENGLISH)
-private fun shortWeekday(d: LocalDate) = d.dayOfWeek.getDisplayName(TextStyle.SHORT, Locale.ENGLISH)
+private fun shortMonth(d: LocalDate) = ReadingDates.monthAlone(d.month, full = false)
 
 // ============================================================ Year in reading
 @Composable
@@ -65,17 +68,22 @@ fun HeatmapWidget(c: BoardCtx, w: Int, hh: Int) {
     val gridW = weeks * cell + (weeks - 1) * g
     val radius = max(1, bx.px(1.5))
     val todayI = c.d.heatToday
-    val label = if (weeks >= 52) "Year in reading" else "Past ${(weeks / 4.35 + 0.5).toInt()} months"
+    val label = if (weeks >= 52) stringResource(R.string.reading_year_in_reading) else (weeks / 4.35 + 0.5).toInt().let { pluralStringResource(R.plurals.reading_past_months, it, it) }
     val used = bx.lh1(13) + bx.px(8) + monthH + bx.px(3) + 7 * cell + 6 * g + bx.px(8) + legendH
     val roomForFigs = total > 0 && hh - 2 * pad - used >= bx.lh1(20) + bx.lh1(11) + bx.px(6)
+    val hoursText = stringResource(R.string.reading_duration_h, (total / 60.0 + 0.5).toInt())
     val figs = listOf(
-        "${(total / 60.0 + 0.5).toInt()} h" to "read", "$daysRead" to "days", "${c.d.longestStreak}" to "best streak",
-        "${(total / max(1, daysRead).toDouble() + 0.5).toInt()} min" to "a reading day"
+        hoursText to stringResource(R.string.reading_fig_read), "$daysRead" to stringResource(R.string.reading_fig_days),
+        "${c.d.longestStreak}" to stringResource(R.string.reading_fig_best_streak),
+        stringResource(R.string.reading_duration_min, (total / max(1, daysRead).toDouble() + 0.5).toInt()) to stringResource(R.string.reading_fig_per_day)
     )
+    val daysReadText = pluralStringResource(R.plurals.reading_n_days, daysRead, daysRead)
+    val bestDayLabel = stringResource(R.string.reading_best_day)
+    val heatEmpty = stringResource(R.string.reading_heat_empty)
     val g4 = Ink.g4
     WPad(w, hh, pad, Alignment.CenterHorizontally) {
         BHead(iw, label, if (!roomForFigs && total > 0) ({
-            BRuns(listOf(Run("${(total / 60.0 + 0.5).toInt()} h", b = true), Run(" · $daysRead days", color = g4)), 13.0)
+            BRuns(listOf(Run(hoursText, b = true), Run(" · $daysReadText", color = g4)), 13.0)
         }) else null)
         VGap(bx.px(8))
         // Month names above the weeks where the month changes.
@@ -120,14 +128,14 @@ fun HeatmapWidget(c: BoardCtx, w: Int, hh: Int) {
         Row(Modifier.width(bx.d(gridW)).height(bx.d(legendH)), verticalAlignment = Alignment.CenterVertically) {
             if (bestI >= 0) {
                 val d = c.d.heatStart.plusDays(bestI.toLong())
-                BRuns(listOf(Run("Best day "), Run(BoardData.shortDuration(best), b = true, color = Ink.black), Run(", ${shortWeekday(d)} ${d.dayOfMonth} ${shortMonth(d)}")), 11.0, color = g4)
-            } else BText("Your reading days fill in here", 11.0, color = g4)
+                BRuns(listOf(Run("$bestDayLabel "), Run(BoardData.shortDuration(best), b = true, color = Ink.black), Run(", " + ReadingDates.weekdayDayMonthPlain(d))), 11.0, color = g4)
+            } else BText(heatEmpty, 11.0, color = g4)
             Flex()
-            BText("Less", 11.0, color = g4)
+            BText(stringResource(R.string.reading_less), 11.0, color = g4)
             HGap(bx.px(5))
             Row(horizontalArrangement = Arrangement.spacedBy(bx.dd(3))) { listOf(0, 20, 45, 90, 200).forEach { BRect(sw, sw, level(it), radius) } }
             HGap(bx.px(5))
-            BText("More", 11.0, color = g4)
+            BText(stringResource(R.string.reading_more), 11.0, color = g4)
         }
     }
 }
@@ -142,30 +150,40 @@ fun ForecastWidget(c: BoardCtx, w: Int, hh: Int) {
     val iw = w - 2 * pad
     val ih = hh - 2 * pad
     val ink = BoardColour.icon("forecast")
+    val forecastLabel = stringResource(R.string.reading_finish_forecast)
     if (f == null) {
         WPad(w, hh, pad) {
-            BHead(iw, "Finish forecast", { Ic("hourglass", 16, ink, iconSw(2.25f)) })
+            BHead(iw, forecastLabel, { Ic("hourglass", 16, ink, iconSw(2.25f)) })
             VGap(bx.px(6))
-            BText("Read a little on this device and a finish date shows up here.", 13.0, color = Ink.g4, lines = 3, w = iw)
+            BText(stringResource(R.string.reading_forecast_empty), 13.0, color = Ink.g4, lines = 3, w = iw)
         }
         return
     }
-    val dayLong = when (f.daysOut) { 0 -> "Today"; 1 -> "Tomorrow"; else -> f.date.dayOfWeek.getDisplayName(TextStyle.FULL, Locale.ENGLISH) }
-    val date = "${f.date.dayOfMonth} ${shortMonth(f.date)}"
-    val dayShort = (if (f.daysOut <= 1) dayLong else shortWeekday(f.date)) + " ${f.date.dayOfMonth}"
+    val dayLong = when (f.daysOut) {
+        0 -> stringResource(R.string.reading_today); 1 -> stringResource(R.string.reading_tomorrow)
+        else -> ReadingDates.weekday(f.date.dayOfWeek, full = true)
+    }
+    val date = ReadingDates.dayMonth(f.date)
+    val dayShort = if (f.daysOut <= 1) "$dayLong ${f.date.dayOfMonth}" else ReadingDates.weekdayDay(f.date)
+    val finishLabel = stringResource(R.string.reading_finish)
+    val bottomTexts = listOf(
+        BoardData.shortDuration(f.minutesLeft).let { stringResource(R.string.reading_time_left, it) },
+        stringResource(R.string.reading_time_left, BoardData.duration(f.minutesLeft)),
+        stringResource(R.string.reading_forecast_left_pace, BoardData.duration(f.minutesLeft), f.perDay)
+    )
     fun wOf(t: String, s: Double, b: Boolean = false) = measurer.measure(AnnotatedString(t), boardStyle(bx, s, bold = b), maxLines = 1, softWrap = false).size.width
     val coverW = (ih * 2 / 3.0 + 0.5).toInt()
     // The plugin's list of layouts, best first: the first one whose words fit the width and whose lines fit the height wins.
     // A one-row box on a short screen ends on the plainer ones. day: 0 long ("Sunday  22 Nov"), 1 weekday only, 2 short ("Sun 22").
     class Cfg(val side: Boolean, val day: Int, val bottom: Int, val label: String)
     val cfgs = listOf(
-        Cfg(true, 0, 2, "Finish forecast"), Cfg(true, 0, 1, "Finish forecast"), Cfg(false, 0, 2, "Finish forecast"), Cfg(false, 0, 1, "Finish forecast"),
-        Cfg(true, 1, 1, "Finish"), Cfg(false, 1, 0, "Finish"), Cfg(false, 2, 0, "Finish"), Cfg(false, 2, -1, "Finish")
+        Cfg(true, 0, 2, forecastLabel), Cfg(true, 0, 1, forecastLabel), Cfg(false, 0, 2, forecastLabel), Cfg(false, 0, 1, forecastLabel),
+        Cfg(true, 1, 1, finishLabel), Cfg(false, 1, 0, finishLabel), Cfg(false, 2, 0, finishLabel), Cfg(false, 2, -1, finishLabel)
     )
     fun bottomText(level: Int) = when (level) {
-        2 -> "${BoardData.duration(f.minutesLeft)} left at ~${f.perDay} min a day"
-        1 -> "${BoardData.duration(f.minutesLeft)} left"
-        else -> "${BoardData.shortDuration(f.minutesLeft)} left"
+        2 -> bottomTexts[2]
+        1 -> bottomTexts[1]
+        else -> bottomTexts[0]
     }
     fun dayH(c: Cfg) = if (c.day == 2) bx.lh1(20) else bx.lh1(22)
     fun fits(c: Cfg): Boolean {
@@ -203,10 +221,13 @@ fun ForecastWidget(c: BoardCtx, w: Int, hh: Int) {
 }
 
 // ============================================================ When you read
-private val DAY_PARTS = listOf("Mornings" to (5..11), "Afternoons" to (12..16), "Evenings" to (17..21), "Late nights" to (22..28))
+private val DAY_PARTS = listOf(
+    R.string.reading_part_mornings to (5..11), R.string.reading_part_afternoons to (12..16),
+    R.string.reading_part_evenings to (17..21), R.string.reading_part_late_nights to (22..28)
+)
 
-private fun dayPart(hours: List<Int>): String? {
-    var best: String? = null
+private fun dayPart(hours: List<Int>): Int? {
+    var best: Int? = null
     var bestMin = 0
     for ((name, range) in DAY_PARTS) {
         val m = range.sumOf { hours.getOrElse(it % 24) { 0 } }
@@ -222,13 +243,14 @@ fun HoursWidget(c: BoardCtx, w: Int, hh: Int) {
     val pad = bx.px(12)
     val iw = w - 2 * pad
     val hours = c.d.data.hours
-    val part = dayPart(hours)
+    val part = dayPart(hours)?.let { stringResource(it) }
     val ink = BoardColour.icon("hours")
+    val whenYouRead = stringResource(R.string.reading_when_you_read)
     if (part == null) {
         WPad(w, hh, pad) {
-            BHead(iw, "When you read", { Ic("sun-moon", 17, ink, iconSw(2.25f)) })
+            BHead(iw, whenYouRead, { Ic("sun-moon", 17, ink, iconSw(2.25f)) })
             VGap(bx.px(6))
-            BText("Read on this device and your hours show up here.", 13.0, color = Ink.g4, lines = 3, w = iw)
+            BText(stringResource(R.string.reading_hours_empty), 13.0, color = Ink.g4, lines = 3, w = iw)
         }
         return
     }
@@ -245,15 +267,15 @@ fun HoursWidget(c: BoardCtx, w: Int, hh: Int) {
     val tall = tallH >= bx.px(40)
     val besideH = hh - 2 * pad - bx.lh1(13) - bx.px(8) - bx.px(4) - bx.lh1(11)
     val chartH = if (tall) tallH else max(minChart, besideH)
-    val peakLabel = "Most at %02d:00".format(peak)
+    val peakLabel = stringResource(R.string.reading_most_at, "%02d:00".format(RS.locale, peak))
     val peakCol = BoardColour.ink("hours", Ink.black)
     val midCol = BoardColour.mid("hours", Ink.g8)
     WPad(w, hh, pad) {
         if (tall) {
-            BHead(iw, "When you read", { Ic("sun-moon", 17, ink, iconSw(2.25f)) })
+            BHead(iw, whenYouRead, { Ic("sun-moon", 17, ink, iconSw(2.25f)) })
             VGap(bx.px(4)); BText(part, 20.0, bold = true, w = iw); VGap(bx.px(2)); BText(peakLabel, 12.0, color = Ink.g4, w = iw); VGap(bx.px(10))
         } else {
-            BHead(iw, "When you read", { BText(part, 13.0, bold = true) }, rightW = measurer.measure(AnnotatedString(part), boardStyle(bx, 13.0, bold = true), maxLines = 1, softWrap = false).size.width)
+            BHead(iw, whenYouRead, { BText(part, 13.0, bold = true) }, rightW = measurer.measure(AnnotatedString(part), boardStyle(bx, 13.0, bold = true), maxLines = 1, softWrap = false).size.width)
             VGap(bx.px(8))
         }
         Row(Modifier.width(bx.d(chartW)).height(bx.d(chartH - base)), horizontalArrangement = Arrangement.spacedBy(bx.d(gap)), verticalAlignment = Alignment.Bottom) {
@@ -279,26 +301,27 @@ fun RecordsWidget(c: BoardCtx, w: Int, hh: Int) {
     val pad = bx.px(12)
     val iw = w - 2 * pad
     val ink = BoardColour.icon("records")
+    val recordsTitle = stringResource(R.string.reading_reading_records)
     if (r == null) {
         WPad(w, hh, pad) {
-            BHead(iw, "Reading records", { Ic("award", 17, ink, iconSw(2.25f)) })
+            BHead(iw, recordsTitle, { Ic("award", 17, ink, iconSw(2.25f)) })
             VGap(bx.px(6))
-            BText("Your records appear as you read on this device.", 13.0, color = Ink.g4, lines = 3, w = iw)
+            BText(stringResource(R.string.reading_records_empty), 13.0, color = Ink.g4, lines = 3, w = iw)
         }
         return
     }
     val g = bx.px(12)
     val half = (iw - g) / 2
     val stats = listOf(
-        BoardData.duration(r.longestMin) to "longest session", "${r.pagesPerHour}" to "pages an hour",
-        BoardData.duration(r.avgMin) to "average session", BoardData.count(r.sessions) to "sessions"
+        BoardData.duration(r.longestMin) to stringResource(R.string.reading_record_longest), "${r.pagesPerHour}" to stringResource(R.string.reading_record_pages_hour),
+        BoardData.duration(r.avgMin) to stringResource(R.string.reading_record_average), BoardData.count(r.sessions) to stringResource(R.string.reading_record_sessions)
     )
     val twoRows = hh >= bx.px(150)
     @Composable fun cell(st: Pair<String, String>, cw: Int, vs: Double) = Column(Modifier.width(bx.d(cw))) {
         BText(st.first, vs, bold = true, w = cw); VGap(bx.px(2)); BText(st.second, 11.0, color = Ink.g4, w = cw)
     }
     WPad(w, hh, pad) {
-        BHead(iw, "Reading records", { Ic("award", 17, ink, iconSw(2.25f)) })
+        BHead(iw, recordsTitle, { Ic("award", 17, ink, iconSw(2.25f)) })
         Flex()
         Row(horizontalArrangement = Arrangement.spacedBy(bx.d(g))) { cell(stats[0], half, 22.0); cell(stats[1], iw - half - g, 22.0) }
         if (twoRows) {
@@ -318,11 +341,12 @@ fun YearAgoWidget(c: BoardCtx, w: Int, hh: Int) {
     val ih = hh - 2 * pad
     val ink = BoardColour.icon("yearago")
     val cal: @Composable () -> Unit = { Ic("calendar-clock", 17, ink, iconSw(2.25f)) }
+    val yearAgoTitle = stringResource(R.string.reading_a_year_ago)
     if (y == null) {
         WPad(w, hh, pad) {
-            BHead(iw, "A year ago", cal)
+            BHead(iw, yearAgoTitle, cal)
             VGap(bx.px(6))
-            BText("Next year, this shows what you were reading today.", 13.0, color = Ink.g4, lines = 3, w = iw)
+            BText(stringResource(R.string.reading_year_ago_empty), 13.0, color = Ink.g4, lines = 3, w = iw)
         }
         return
     }
@@ -335,7 +359,7 @@ fun YearAgoWidget(c: BoardCtx, w: Int, hh: Int) {
             BCover(y.book, coverW, ih)
             HGap(bx.px(12))
             Column(Modifier.width(bx.d(tw)).height(bx.d(ih))) {
-                BHead(tw, "A year ago")
+                BHead(tw, yearAgoTitle)
                 Flex()
                 BText(y.book.title, 15.0, bold = true, w = tw)
                 BText(BoardData.shortDuration(y.minutes), 12.0, color = Ink.g4, w = tw)
@@ -349,7 +373,7 @@ fun YearAgoWidget(c: BoardCtx, w: Int, hh: Int) {
     val tw = iw - coverW - bx.px(14)
     val btnH = bx.px(34)
     WPad(w, hh, pad) {
-        BHead(iw, "A year ago", if (true) ({ BText(BoardData.partOfMonth(y.date), 12.0, color = Ink.g4) }) else cal)
+        BHead(iw, yearAgoTitle, if (true) ({ BText(BoardData.partOfMonth(y.date), 12.0, color = Ink.g4) }) else cal)
         VGap(bx.px(10))
         Row(Modifier.width(bx.d(iw)).height(bx.d(bodyH)), horizontalArrangement = Arrangement.spacedBy(bx.dd(14)), verticalAlignment = Alignment.Top) {
             BCover(y.book, coverW, coverH)
@@ -357,14 +381,14 @@ fun YearAgoWidget(c: BoardCtx, w: Int, hh: Int) {
                 BText(y.book.title, 17.0, bold = true, lines = 2, w = tw)
                 BText(y.book.author, 13.0, color = Ink.g4, w = tw)
                 VGap(bx.px(8))
-                BText("${BoardData.duration(y.minutes)} of reading that day.", 13.0, lines = 3, w = tw)
+                BText(stringResource(R.string.reading_reading_that_day, BoardData.duration(y.minutes)), 13.0, lines = 3, w = tw)
                 Flex()
                 Row(
                     Modifier.height(bx.d(btnH)).clip(RoundedCornerShape(bx.d(btnH / 2))).border(bx.d(max(1, bx.px(1.5))), Ink.black, RoundedCornerShape(bx.d(btnH / 2)))
                         .tapOrHold({ c.onOpen(y.book) }),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    HGap(bx.px(14)); Ic("book-open", 15, Ink.black, 2.25f); HGap(bx.px(6)); BText("Pick it up", 13.0, bold = true); HGap(bx.px(14))
+                    HGap(bx.px(14)); Ic("book-open", 15, Ink.black, 2.25f); HGap(bx.px(6)); BText(stringResource(R.string.reading_pick_it_up), 13.0, bold = true); HGap(bx.px(14))
                 }
             }
         }
@@ -386,7 +410,7 @@ fun WordWidget(c: BoardCtx, w: Int, hh: Int) {
     val lines = max(0, min(5, (hh - 2 * pad - used) / max(1, bx.lh(14))))
     val wordFit = fitSize(measurer, bx, wd.word, true, true, iw, ws.toInt(), 18)
     WPad(w, hh, pad) {
-        BHead(iw, "Word of the day", { Ic("whole-word", 17, ink, iconSw(2.25f)) })
+        BHead(iw, stringResource(R.string.reading_word_of_day), { Ic("whole-word", 17, ink, iconSw(2.25f)) })
         VGap(bx.px(if (tall) 10 else 4))
         BText(wd.word, wordFit.toDouble(), bold = true, serif = true, color = BoardColour.ink("word", Ink.black), w = iw)
         if (lines > 0) {
@@ -429,11 +453,12 @@ fun CalendarWidget(c: BoardCtx, w: Int, hh: Int) {
     val deepCol = BoardColour.deep("calendar", Ink.black)
     val inkCol = BoardColour.ink("calendar", Ink.g6)
     WPad(w, hh, pad, Alignment.CenterHorizontally) {
-        BHead(iw, today.month.getDisplayName(TextStyle.FULL, Locale.ENGLISH), { BText("$readCount days read", 12.0, color = Ink.g4) })
+        BHead(iw, ReadingDates.monthAlone(today.month), { BText(pluralStringResource(R.plurals.reading_days_read, readCount, readCount), 12.0, color = Ink.g4) })
         VGap(bx.px(8))
         if (numbered && !strip) {
             Row(Modifier.width(bx.d(gridW)).height(bx.d(headRowH)), horizontalArrangement = Arrangement.spacedBy(bx.d(gap))) {
-                listOf("S", "M", "T", "W", "T", "F", "S").forEach { BText(it, 11.0, color = Ink.g4, w = cell, align = TextAlign.Center) }
+                listOf(DayOfWeek.SUNDAY, DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY, DayOfWeek.SATURDAY)
+                    .forEach { BText(ReadingDates.weekdayInitial(it), 11.0, color = Ink.g4, w = cell, align = TextAlign.Center) }
             }
         }
         Box(Modifier.size(bx.d(gridW), bx.d(rows * cell + (rows - 1) * gap))) {

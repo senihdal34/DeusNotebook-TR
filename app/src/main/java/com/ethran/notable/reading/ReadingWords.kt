@@ -1,42 +1,47 @@
 package com.ethran.notable.reading
 
+import androidx.annotation.StringRes
+import com.ethran.notable.R
 import java.time.LocalDate
 
-data class WordOfDay(val word: String, val meaning: String)
+/** The word stays English (it is a list of English words to learn); [meaning] follows the app language. */
+data class WordOfDay(val word: String, @StringRes val meaningRes: Int) {
+    val meaning: String get() = RS.get(meaningRes)
+}
 
 /** A short list of words worth knowing, one a day. Chosen by date, so the word stays the same all day and on every launch. */
 object ReadingWords {
     val WORDS: List<WordOfDay> = listOf(
-        WordOfDay("ephemeral", "lasting a very short time"),
-        WordOfDay("sonder", "the sense that every passer-by has a life as vivid as your own"),
-        WordOfDay("petrichor", "the smell of rain on dry earth"),
-        WordOfDay("liminal", "on the threshold between two states"),
-        WordOfDay("sanguine", "cheerful and hopeful, especially when things look bad"),
-        WordOfDay("laconic", "using very few words"),
-        WordOfDay("ineffable", "too great to be put into words"),
-        WordOfDay("mellifluous", "sweet and smooth to hear"),
-        WordOfDay("equanimity", "calm of mind under strain"),
-        WordOfDay("serendipity", "a lucky find made by chance"),
-        WordOfDay("obfuscate", "to make something unclear on purpose"),
-        WordOfDay("perspicacious", "quick to see and understand things"),
-        WordOfDay("halcyon", "calm and happy, as in days gone by"),
-        WordOfDay("recondite", "known to few; hard to understand"),
-        WordOfDay("tenacious", "holding on firmly; not giving up"),
-        WordOfDay("verdant", "green with growing plants"),
-        WordOfDay("quixotic", "idealistic in a way that is not practical"),
-        WordOfDay("sedulous", "working at something with care and patience"),
-        WordOfDay("lucid", "clear and easy to understand"),
-        WordOfDay("crepuscular", "of twilight; active at dusk and dawn"),
-        WordOfDay("palimpsest", "a page written over an older text that still shows through"),
-        WordOfDay("eloquent", "speaking or writing clearly and with force"),
-        WordOfDay("fastidious", "very careful about detail and accuracy"),
-        WordOfDay("gregarious", "fond of company"),
-        WordOfDay("juxtapose", "to set two things side by side to compare them"),
-        WordOfDay("limpid", "perfectly clear, like clean water"),
-        WordOfDay("numinous", "having a strong spiritual or mysterious feeling"),
-        WordOfDay("reverie", "a pleasant, dreamy train of thought"),
-        WordOfDay("solace", "comfort in a time of sadness"),
-        WordOfDay("zenith", "the highest point")
+        WordOfDay("ephemeral", R.string.reading_word_ephemeral),
+        WordOfDay("sonder", R.string.reading_word_sonder),
+        WordOfDay("petrichor", R.string.reading_word_petrichor),
+        WordOfDay("liminal", R.string.reading_word_liminal),
+        WordOfDay("sanguine", R.string.reading_word_sanguine),
+        WordOfDay("laconic", R.string.reading_word_laconic),
+        WordOfDay("ineffable", R.string.reading_word_ineffable),
+        WordOfDay("mellifluous", R.string.reading_word_mellifluous),
+        WordOfDay("equanimity", R.string.reading_word_equanimity),
+        WordOfDay("serendipity", R.string.reading_word_serendipity),
+        WordOfDay("obfuscate", R.string.reading_word_obfuscate),
+        WordOfDay("perspicacious", R.string.reading_word_perspicacious),
+        WordOfDay("halcyon", R.string.reading_word_halcyon),
+        WordOfDay("recondite", R.string.reading_word_recondite),
+        WordOfDay("tenacious", R.string.reading_word_tenacious),
+        WordOfDay("verdant", R.string.reading_word_verdant),
+        WordOfDay("quixotic", R.string.reading_word_quixotic),
+        WordOfDay("sedulous", R.string.reading_word_sedulous),
+        WordOfDay("lucid", R.string.reading_word_lucid),
+        WordOfDay("crepuscular", R.string.reading_word_crepuscular),
+        WordOfDay("palimpsest", R.string.reading_word_palimpsest),
+        WordOfDay("eloquent", R.string.reading_word_eloquent),
+        WordOfDay("fastidious", R.string.reading_word_fastidious),
+        WordOfDay("gregarious", R.string.reading_word_gregarious),
+        WordOfDay("juxtapose", R.string.reading_word_juxtapose),
+        WordOfDay("limpid", R.string.reading_word_limpid),
+        WordOfDay("numinous", R.string.reading_word_numinous),
+        WordOfDay("reverie", R.string.reading_word_reverie),
+        WordOfDay("solace", R.string.reading_word_solace),
+        WordOfDay("zenith", R.string.reading_word_zenith)
     )
 
     /** The word for [date]: the same word all day, a new one the next day. */
