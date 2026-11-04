@@ -9,6 +9,8 @@
     <!-- The reading board reads NeoReader's library and reading log through its content providers. -->
     <queries>
         <package android:name="com.onyx.kreader" />
+        <package android:name="com.onyx" />
+        <package android:name="com.onyx.android.note" />
         <provider android:authorities="com.onyx.content.database.ContentProvider" />
         <provider android:authorities="com.onyx.kreader.statistics.provider" />
     </queries>

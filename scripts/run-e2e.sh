@@ -8,6 +8,8 @@ export JAVA_HOME=${JAVA_HOME:-/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/C
 export ANDROID_HOME=${ANDROID_HOME:-/opt/homebrew/share/android-commandlinetools}
 export PATH=/opt/homebrew/bin:$JAVA_HOME/bin:$PATH
 PKG=io.aragonite.notes.debug
+# The test copy is temporary: remove it when the script ends, even on failure (the real app stays the only one).
+trap 'adb uninstall $PKG >/dev/null 2>&1 || true' EXIT
 ./gradlew -PSIDE_BY_SIDE=true assembleDebug --console=plain -q
 # The side-by-side TEST app (io.aragonite.notes.debug) may carry an older signing key: reinstall it.
 # The real app (io.aragonite.notes) is never touched by this script.

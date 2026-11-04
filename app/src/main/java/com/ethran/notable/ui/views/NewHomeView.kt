@@ -56,6 +56,7 @@ import com.ethran.notable.data.db.PageTagRepository
 import com.ethran.notable.planner.PlannerLaunch
 import com.ethran.notable.utils.RelativeTime
 import compose.icons.FeatherIcons
+import compose.icons.feathericons.Settings
 import compose.icons.feathericons.Tag
 import compose.icons.feathericons.Trash
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -301,8 +302,13 @@ private fun Masthead(
         Column(horizontalAlignment = Alignment.End) {
             Caps(date, 12, Grey1, FontWeight.Bold)
             Caps(stringResource(R.string.home_summary, AppStrings.plural(R.plurals.home_notes_count, total, total), AppStrings.plural(R.plurals.home_favorites_count, state.pinnedPages.size, state.pinnedPages.size)), 12, Grey1, FontWeight.Bold, modifier = Modifier.padding(top = 2.dp))
-            Caps(stringResource(R.string.home_settings), 12, Ink, FontWeight.Bold, Modifier.tap(a.settings).padding(top = 2.dp, start = 12.dp))
         }
+        // Settings: a round icon button at the far right of the title row, like the pills under the notes.
+        Spacer(Modifier.width(16.dp))
+        Box(
+            Modifier.size(46.dp).clip(Pill).border(1.5.dp, Ink, Pill).tap(a.settings),
+            contentAlignment = Alignment.Center
+        ) { Icon(FeatherIcons.Settings, contentDescription = stringResource(R.string.home_settings), tint = Ink, modifier = Modifier.size(24.dp)) }
     }
     Rule(5.dp)
     MainNav(section, a)

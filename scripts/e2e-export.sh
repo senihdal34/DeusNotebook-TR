@@ -8,6 +8,8 @@ export JAVA_HOME=${JAVA_HOME:-/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/C
 export ANDROID_HOME=${ANDROID_HOME:-/opt/homebrew/share/android-commandlinetools}
 export PATH=/opt/homebrew/bin:$JAVA_HOME/bin:$PATH
 PKG=io.aragonite.notes.debug
+# The test copy is temporary: remove it when the script ends, even on failure (the real app stays the only one).
+trap 'adb uninstall $PKG >/dev/null 2>&1 || true' EXIT
 OUT=.e2e-shots/export-result
 [ -f .e2e-seed/app_database ] || { echo "missing .e2e-seed/app_database"; exit 2; }
 

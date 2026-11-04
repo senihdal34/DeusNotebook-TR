@@ -140,6 +140,12 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        // A language the user was waiting for may have been downloaded in Boox Notes meanwhile.
+        com.ethran.notable.i18n.WritingLanguageAvailability.promotePending(this)
+    }
+
     override fun onRestart() {
         super.onRestart()
         // redraw after device sleep

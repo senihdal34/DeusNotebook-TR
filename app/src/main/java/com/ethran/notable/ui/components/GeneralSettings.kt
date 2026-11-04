@@ -138,8 +138,7 @@ private fun ClearAllPagesButton(onClearAllPages: (onComplete: () -> Unit) -> Uni
     if (isClearing) {
         Text(
             stringResource(R.string.settings_clearing),
-            style = MaterialTheme.typography.body1,
-            color = Color.Gray,
+            fontFamily = House.Serif, fontStyle = androidx.compose.ui.text.font.FontStyle.Italic, fontSize = 20.sp, color = House.Grey1,
             modifier = Modifier.padding(vertical = 12.dp)
         )
     } else if (confirmState) {
@@ -149,42 +148,21 @@ private fun ClearAllPagesButton(onClearAllPages: (onComplete: () -> Unit) -> Uni
         ) {
             Text(
                 stringResource(R.string.settings_delete_all_q),
-                style = MaterialTheme.typography.body1,
+                fontFamily = House.Sans, fontSize = 20.sp, fontWeight = FontWeight.Medium, color = House.Ink,
                 modifier = Modifier.weight(1f)
             )
-            Box(
-                modifier = Modifier
-                    .background(Color.Black, RoundedCornerShape(6.dp))
-                    .clickable {
-                        isClearing = true
-                        onClearAllPages {
-                            isClearing = false
-                            confirmState = false
-                        }
-                    }
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
-            ) {
-                Text(stringResource(R.string.settings_yes_delete_all), color = Color.White, fontSize = 14.sp)
+            HousePillButton(stringResource(R.string.settings_yes_delete_all), filled = true) {
+                isClearing = true
+                onClearAllPages {
+                    isClearing = false
+                    confirmState = false
+                }
             }
-            Spacer(modifier = Modifier.padding(horizontal = 4.dp))
-            Box(
-                modifier = Modifier
-                    .border(1.dp, Color.Gray, RoundedCornerShape(6.dp))
-                    .clickable { confirmState = false }
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
-            ) {
-                Text(stringResource(R.string.action_cancel), fontSize = 14.sp)
-            }
+            Spacer(modifier = Modifier.padding(horizontal = 6.dp))
+            HousePillButton(stringResource(R.string.action_cancel)) { confirmState = false }
         }
     } else {
-        Box(
-            modifier = Modifier
-                .border(1.dp, Color.Red, RoundedCornerShape(6.dp))
-                .clickable { confirmState = true }
-                .padding(horizontal = 16.dp, vertical = 10.dp)
-        ) {
-            Text(stringResource(R.string.settings_clear_all_pages), color = Color.Red, fontSize = 14.sp)
-        }
+        HousePillButton(stringResource(R.string.settings_clear_all_pages)) { confirmState = true }
     }
 }
 
@@ -199,64 +177,51 @@ private fun InboxCaptureSettings(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .border(1.dp, Color.LightGray, RoundedCornerShape(8.dp))
-            .padding(16.dp)
+            .border(1.5.dp, House.Ink, RoundedCornerShape(20.dp))
+            .padding(20.dp)
     ) {
         Text(
             stringResource(R.string.settings_capture_title),
-            style = MaterialTheme.typography.h6,
-            fontWeight = FontWeight.Bold
+            fontFamily = House.Serif, fontWeight = FontWeight.Bold, fontSize = 28.sp, color = House.Ink
         )
 
-        Spacer(modifier = Modifier.height(4.dp))
+        Spacer(modifier = Modifier.height(6.dp))
 
         Text(
             stringResource(R.string.settings_capture_description),
-            style = MaterialTheme.typography.body2,
-            color = Color.Gray
+            fontFamily = House.Serif, fontStyle = androidx.compose.ui.text.font.FontStyle.Italic, fontSize = 18.sp, lineHeight = 24.sp,
+            color = House.Grey1
         )
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
-        Text(
-            stringResource(R.string.settings_vault_folder),
-            style = MaterialTheme.typography.body1,
-            fontWeight = FontWeight.Medium
+        HouseCaps(stringResource(R.string.settings_vault_folder), 12, House.Ink)
+
+        Spacer(modifier = Modifier.height(6.dp))
+
+        BasicTextField(
+            value = pathInput,
+            onValueChange = { pathInput = it },
+            textStyle = TextStyle(fontFamily = House.Sans, fontSize = 18.sp, color = House.Ink),
+            singleLine = true,
+            cursorBrush = SolidColor(House.Ink),
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+            keyboardActions = KeyboardActions(onDone = {
+                onSettingsChange(settings.copy(obsidianInboxPath = pathInput))
+                VaultTagScanner.refreshCache(pathInput)
+                focusManager.clearFocus()
+            }),
+            modifier = Modifier
+                .fillMaxWidth()
+                .border(1.5.dp, House.Ink, House.Pill)
+                .padding(horizontal = 18.dp, vertical = 12.dp)
         )
 
-        Spacer(modifier = Modifier.height(4.dp))
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            BasicTextField(
-                value = pathInput,
-                onValueChange = { pathInput = it },
-                textStyle = TextStyle(fontSize = 16.sp, color = Color.Black),
-                singleLine = true,
-                cursorBrush = SolidColor(Color.Black),
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                keyboardActions = KeyboardActions(onDone = {
-                    onSettingsChange(settings.copy(obsidianInboxPath = pathInput))
-                    VaultTagScanner.refreshCache(pathInput)
-                    focusManager.clearFocus()
-                }),
-                modifier = Modifier
-                    .weight(1f)
-                    .border(1.dp, Color.Gray, RoundedCornerShape(6.dp))
-                    .padding(horizontal = 12.dp, vertical = 10.dp)
-            )
-        }
-
-        Spacer(modifier = Modifier.height(4.dp))
+        Spacer(modifier = Modifier.height(6.dp))
 
         Text(
             stringResource(R.string.settings_vault_folder_hint),
-            style = MaterialTheme.typography.caption,
-            color = Color.Gray
+            fontFamily = House.Sans, fontSize = 14.sp, color = House.Grey1
         )
     }
-
-    SettingsDivider()
 }

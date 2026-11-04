@@ -56,6 +56,14 @@ import androidx.core.net.toUri
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.ethran.notable.BuildConfig
 import com.ethran.notable.R
+import com.ethran.notable.ui.components.House
+import com.ethran.notable.ui.components.HouseCaps
+import com.ethran.notable.ui.components.HouseIconButton
+import com.ethran.notable.ui.components.HousePillButton
+import com.ethran.notable.ui.components.HouseRule
+import com.ethran.notable.ui.components.houseTap
+import compose.icons.FeatherIcons
+import compose.icons.feathericons.ArrowLeft
 import com.ethran.notable.data.datastore.AppSettings
 import com.ethran.notable.navigation.NavigationDestination
 import com.ethran.notable.ui.SnackState
@@ -134,12 +142,12 @@ fun SettingsContent(
     )
 
     Surface(
-        modifier = Modifier.fillMaxSize(), color = MaterialTheme.colors.background
+        modifier = Modifier.fillMaxSize(), color = House.Paper
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 16.dp)
+                .padding(horizontal = 56.dp)
         ) {
             SettingsTitleBar(versionString, onBack)
 
@@ -168,18 +176,10 @@ fun SettingsContent(
                     modifier = Modifier.padding(bottom = 16.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    GitHubSponsorButton(
-                        Modifier
-                            .padding(horizontal = 120.dp, vertical = 16.dp)
-                            .height(48.dp)
-                            .fillMaxWidth()
-                    )
+                    GitHubSponsorButton(Modifier.padding(vertical = 8.dp))
                     UpdateActions(
                         isLatestVersion = isLatestVersion, onCheckUpdate = onCheckUpdate,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 30.dp, vertical = 8.dp)
-                            .height(48.dp)
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
                     )
                 }
             }
@@ -189,85 +189,57 @@ fun SettingsContent(
 
 @Composable
 private fun SettingsTitleBar(versionString: String, onBack: () -> Unit) {
+    // Same header as Home and Reading: logo, serif title, small block on the right; here the back button replaces the logo's place on the left.
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
+            .padding(top = 18.dp, bottom = 10.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        IconButton(onClick = onBack, modifier = Modifier.size(40.dp)) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = "Back",
-                tint = MaterialTheme.colors.onBackground
-            )
-        }
-
+        HouseIconButton(FeatherIcons.ArrowLeft, stringResource(R.string.settings_back), onClick = onBack)
+        Spacer(Modifier.width(18.dp))
         Text(
             text = stringResource(R.string.settings_title),
-            style = MaterialTheme.typography.h5,
-            modifier = Modifier.weight(1f),
-            textAlign = TextAlign.Center
+            fontFamily = House.Serif, fontWeight = FontWeight.Bold, fontSize = 36.sp, letterSpacing = (-1).sp,
+            color = House.Ink, maxLines = 1, modifier = Modifier.weight(1f)
         )
-        Text(text = versionString, style = MaterialTheme.typography.subtitle1)
+        HouseCaps(versionString, 12)
     }
+    HouseRule(5.dp)
 }
 
 @Composable
 private fun SettingsTabRow(tabs: List<String>, selectedTab: Int, onTabSelected: (Int) -> Unit) {
-    TabRow(
-        selectedTabIndex = selectedTab,
-        backgroundColor = MaterialTheme.colors.surface,
-        contentColor = MaterialTheme.colors.onSurface,
-        indicator = { tabPositions ->
-            TabRowDefaults.Indicator(
-                Modifier.tabIndicatorOffset(tabPositions[selectedTab]),
-                color = MaterialTheme.colors.onSurface.copy(alpha = 0.2f)
-            )
-        },
-        divider = {
-            TabRowDefaults.Divider(
-                color = MaterialTheme.colors.onSurface.copy(alpha = 0.12f), thickness = 1.dp
-            )
-        }) {
+    // The same tab strip as Planner | Notes | Favorites | Reading.
+    Row(
+        Modifier.fillMaxWidth().padding(vertical = 14.dp),
+        horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically
+    ) {
         tabs.forEachIndexed { index, title ->
-            Tab(selected = selectedTab == index, onClick = { onTabSelected(index) }, text = {
+            val on = selectedTab == index
+            Box(
+                Modifier.height(54.dp).houseTap { onTabSelected(index) }
+                    .background(if (on) House.Ink else Color.Transparent).padding(horizontal = 26.dp),
+                contentAlignment = Alignment.Center
+            ) {
                 Text(
-                    text = title,
-                    color = if (selectedTab == index) MaterialTheme.colors.onSurface
-                    else MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
+                    title, fontFamily = House.Sans, fontSize = 22.sp, fontWeight = FontWeight.SemiBold,
+                    letterSpacing = 0.4.sp, color = if (on) Color.White else House.Ink
                 )
-            })
+            }
+            if (index < tabs.lastIndex && !on && selectedTab != index + 1) {
+                Box(Modifier.width(1.5.dp).height(26.dp).background(House.Grey2))
+            }
         }
     }
+    HouseRule()
 }
 
 @Composable
 fun GitHubSponsorButton(modifier: Modifier = Modifier) {
     val context = LocalContext.current
-    Box(
-        modifier = modifier
-            .background(color = Color(0xFF24292E), shape = RoundedCornerShape(25.dp))
-            .clickable { openInBrowser(context, "https://github.com/sponsors/ethran") },
-        contentAlignment = Alignment.Center
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(
-                imageVector = Icons.Default.FavoriteBorder,
-                contentDescription = null,
-                tint = Color(0xFFEA4AAA),
-                modifier = Modifier.size(24.dp)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = stringResource(R.string.sponsor_button_text),
-                color = Color.White,
-                style = MaterialTheme.typography.button.copy(
-                    fontWeight = FontWeight.Bold, fontSize = 16.sp
-                ),
-            )
-        }
+    HousePillButton(stringResource(R.string.sponsor_button_text), modifier) {
+        openInBrowser(context, "https://github.com/sponsors/ethran")
     }
 }
 
@@ -277,27 +249,19 @@ fun UpdateActions(
 ) {
     val context = LocalContext.current
     if (!isLatestVersion) {
-        Column(modifier = modifier) {
+        Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
                 text = stringResource(R.string.app_new_version),
-                fontStyle = FontStyle.Italic,
-                style = MaterialTheme.typography.h6,
+                fontFamily = House.Serif, fontStyle = FontStyle.Italic, fontSize = 22.sp, color = House.Ink
             )
             Spacer(Modifier.height(10.dp))
-            Button(
-                onClick = { openInBrowser(context, "https://github.com/ethran/notable/releases") },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Icon(Icons.Default.Upgrade, contentDescription = null)
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(text = stringResource(R.string.app_see_release))
+            HousePillButton(stringResource(R.string.app_see_release), filled = true) {
+                openInBrowser(context, "https://github.com/ethran/notable/releases")
             }
         }
     } else {
-        Button(onClick = { onCheckUpdate(true) }, modifier = modifier) {
-            Icon(Icons.Default.Update, contentDescription = null)
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(text = stringResource(R.string.app_check_updates))
+        Box(modifier, contentAlignment = Alignment.Center) {
+            HousePillButton(stringResource(R.string.app_check_updates)) { onCheckUpdate(true) }
         }
     }
 }

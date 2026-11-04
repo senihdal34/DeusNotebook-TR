@@ -9,7 +9,7 @@ appId: io.aragonite.notes.debug
 - assertVisible: "Yeni Finans Ürün Planı"
 - assertVisible: "Gün 1- 14 Eylül"
 - assertVisible: ".*NEW NOTE"
-- assertVisible: "SETTINGS"
+- assertVisible: "Settings"
 # thumbnails are rendered in the background (long notes take a while)
 - extendedWaitUntil:
     visible: "Notes"
