@@ -81,7 +81,7 @@ class ReadingViewModel @Inject constructor(@ApplicationContext private val conte
         _ui.update { it.copy(chapters = ChapterState.Loading(book.id)) }
         chaptersJob = viewModelScope.launch(Dispatchers.IO) {
             val result = chapterRepo.load(File(book.path))
-            Log.i(TAG, "chapters for ${File(book.path).name}: " + when (result) {
+            Log.i(TAG, "chapters: " + when (result) {
                 is com.ethran.notable.reading.chapters.ChapterResult.Found -> "${result.map.entries.size} entries (${result.map.source})"
                 is com.ethran.notable.reading.chapters.ChapterResult.None -> "none, ${result.reason.short}"
             })
@@ -109,7 +109,7 @@ class ReadingViewModel @Inject constructor(@ApplicationContext private val conte
             val n = ReadingCovers.copy(src, dest, names)
             if (n > 0) Log.i(TAG, "copied $n covers into $OWN_COVERS")
         } catch (e: Exception) {
-            Log.w(TAG, "could not copy covers: ${e.javaClass.simpleName}: ${e.message}")
+            Log.w(TAG, "could not copy covers: ${e.javaClass.simpleName}")
         }
     }
 

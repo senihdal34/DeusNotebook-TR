@@ -40,7 +40,8 @@ object ReadingLauncher {
             context.startActivity(intent)
             true
         } catch (e: Exception) {
-            Log.w(TAG, "could not open $path: ${e.javaClass.simpleName}: ${e.message}")
+            // Only the outcome: the message of a failed start names the file.
+            Log.w(TAG, "could not open the book: ${e.javaClass.simpleName}")
             Toast.makeText(context, "Could not open the book in NeoReader", Toast.LENGTH_SHORT).show()
             false
         } finally {
