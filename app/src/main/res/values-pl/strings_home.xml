@@ -148,9 +148,6 @@
     <string name="inbox_capture">Zapis</string>
     <string name="inbox_save_exit">Zapisz i wyjdź</string>
     <string name="inbox_tag_hint">szukaj lub dodaj etykiety...</string>
-    <string name="start_in_planner">Otwieraj planer tygodniowy po uruchomieniu aplikacji</string>
-    <string name="palm_guard">Ochrona dłoni: ignoruj gesty palców podczas pisania i przy dolnej krawędzi</string>
-    <string name="pen_button_toggle">Przycisk boczny pióra przełącza między piórem a gumką</string>
     <plurals name="home_notes_count">
         <item quantity="one">%1$d notatka</item>
         <item quantity="few">%1$d notatki</item>
