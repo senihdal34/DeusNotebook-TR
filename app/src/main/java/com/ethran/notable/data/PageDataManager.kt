@@ -399,6 +399,8 @@ object PageDataManager {
     }
 
 
+    fun currentPageId(): String = currentPage
+
     fun setPage(pageId: String) {
         currentPage = pageId
     }
