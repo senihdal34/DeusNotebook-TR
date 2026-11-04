@@ -50,6 +50,7 @@ object OnyxHWREngine {
      * Returns true if service is ready.
      */
     suspend fun bindAndAwait(context: Context, timeoutMs: Long = 2000): Boolean {
+        setLanguage(com.ethran.notable.i18n.LanguagePrefs.writing(context).code)
         if (bound && service != null) return true
 
         // Create a fresh latch for this bind attempt
@@ -89,6 +90,17 @@ object OnyxHWREngine {
 
     @Volatile private var initialized = false
 
+    /** Recognizer language (MyScript code, e.g. "tr_TR"); follows Settings → Writing language. */
+    @Volatile var language: String = com.ethran.notable.i18n.WritingLanguage.DEFAULT_CODE
+        private set
+
+    /** Switches the recognizer language; the next recognition re-initializes the engine with it. */
+    fun setLanguage(code: String) {
+        if (code == language) return
+        language = code
+        initialized = false
+    }
+
     /** User vocabulary applied to every recognition result (null = engine output unchanged). */
     @Volatile var glossary: HwrGlossary? = null
 
@@ -100,7 +112,7 @@ object OnyxHWREngine {
         log.i("Initializing OnyxHWR recognizer...")
 
         val inputArgs = HWRInputArgs().apply {
-            lang = "tr_TR"
+            lang = language
             contentType = "Text"
             recognizerType = "MS_ON_SCREEN"
             this.viewWidth = viewWidth

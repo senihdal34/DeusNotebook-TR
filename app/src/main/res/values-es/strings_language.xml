@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_language">Idioma de la aplicación</string>
+    <string name="writing_language">Idioma de escritura</string>
+    <string name="writing_language_hint">Idioma de tu escritura a mano. Se usa al reconocer las notas como texto.</string>
+    <string name="planner_notebook">Planificador</string>
+    <string name="planner_title">Planificador semanal</string>
+    <string name="planner_week_title">Semana %1$s</string>
+    <string name="planner_year_complete">Año completado al %1$d%%</string>
+    <string name="planner_todo">Pendientes</string>
+    <string name="planner_notes">Notas</string>
+    <string name="planner_previous">‹ Anterior</string>
+    <string name="planner_this_week">Esta semana</string>
+    <string name="planner_next">Siguiente ›</string>
+    <string name="planner_previous_day">‹ Día anterior</string>
+    <string name="planner_next_day">Día siguiente ›</string>
+    <string name="planner_week_button">Semana</string>
+    <string name="planner_back">‹ Planificador</string>
+</resources>

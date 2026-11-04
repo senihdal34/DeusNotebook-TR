@@ -78,6 +78,10 @@ class MainActivity : ComponentActivity() {
     @Inject
     lateinit var exportEngineLazy: dagger.Lazy<ExportEngine>
 
+    override fun attachBaseContext(newBase: android.content.Context) {
+        super.attachBaseContext(com.ethran.notable.i18n.Localization.wrap(newBase))
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableFullScreen()

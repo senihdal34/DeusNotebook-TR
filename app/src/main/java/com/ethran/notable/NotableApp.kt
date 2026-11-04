@@ -10,6 +10,7 @@ class NotableApp : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        com.ethran.notable.i18n.AppStrings.init(this)
         RxManager.Builder.initAppContext(this)
         checkHiddenApiBypass()
     }
