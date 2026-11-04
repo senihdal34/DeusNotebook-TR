@@ -20,6 +20,7 @@ internal class PdfDocument private constructor(private val src: PdfSource) {
     private val xref = HashMap<Int, Loc>()
     private var trailer: PdfDict = PdfDict(emptyMap())
     private val cache = HashMap<Int, Any?>()
+    private val reading = HashSet<Int>()      // objects being read now: one that needs itself to be read is broken
     private val objStms = LinkedHashMap<Int, ObjStm>()
     private var crypto: PdfCrypto? = null
     private var encryptObj = -1               // the object number of /Encrypt when it is indirect: it is never decrypted
@@ -313,15 +314,21 @@ internal class PdfDocument private constructor(private val src: PdfSource) {
         return if (cur is PdfRef) null else cur
     }
 
+    /** The object [num], or null when it is missing or reading it needs itself (a /Length or /N that points back at it). */
     fun readObject(num: Int): Any? {
         if (cache.containsKey(num)) return cache[num]
         val loc = xref[num] ?: return null
-        val value = when (loc) {
-            is InFile -> readIndirectAt(loc.pos, num)
-            is InObjStm -> readFromObjStm(loc, num)
+        if (!reading.add(num)) return null
+        try {
+            val value = when (loc) {
+                is InFile -> readIndirectAt(loc.pos, num)
+                is InObjStm -> readFromObjStm(loc, num)
+            }
+            if (cache.size < 50_000 && value !is PdfStream) cache[num] = value
+            return value
+        } finally {
+            reading.remove(num)
         }
-        if (cache.size < 50_000 && value !is PdfStream) cache[num] = value
-        return value
     }
 
     /** The indirect object at [pos] ("n g obj ... endobj"), with its stream if it has one; decrypted when the file is encrypted. */

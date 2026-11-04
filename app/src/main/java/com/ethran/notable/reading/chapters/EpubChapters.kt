@@ -32,6 +32,8 @@ object EpubChapters {
         ChapterResult.None(NoChapters.Unreadable)
     } catch (e: RuntimeException) {
         ChapterResult.None(NoChapters.Unreadable)
+    } catch (e: StackOverflowError) {
+        ChapterResult.None(NoChapters.Unreadable)
     }
 
     private class Item(val id: String, val path: String, val type: String, val props: String)
