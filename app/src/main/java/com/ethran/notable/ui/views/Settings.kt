@@ -57,6 +57,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.ethran.notable.BuildConfig
 import com.ethran.notable.R
 import com.ethran.notable.ui.components.House
+import com.ethran.notable.ui.components.SyncSettings
 import com.ethran.notable.ui.components.HouseCaps
 import com.ethran.notable.ui.components.HouseIconButton
 import com.ethran.notable.ui.components.HousePillButton
@@ -118,6 +119,14 @@ fun SettingsView(
     )
 }
 
+/** Lets another screen (the welcome page) open Settings on a given tab: set [request], navigate, Settings takes it once. */
+object SettingsTabs {
+    const val GENERAL = 0
+    const val SYNC = 1
+    @Volatile var request: Int? = null
+    fun take(): Int? = request.also { request = null }
+}
+
 @Composable
 fun SettingsContent(
     versionString: String,
@@ -134,9 +143,10 @@ fun SettingsContent(
     listOfGestures: List<GestureRowModel> = emptyList(),
     availableGestures: List<Pair<AppSettings.GestureAction?, Any>> = emptyList()
 ) {
-    var selectedTab by remember { mutableIntStateOf(selectedTabInitial) }
+    var selectedTab by remember { mutableIntStateOf(SettingsTabs.take() ?: selectedTabInitial) }
     val tabs = listOf(
         stringResource(R.string.settings_tab_general_name),
+        stringResource(R.string.sync_tab_name),
         stringResource(R.string.settings_tab_gestures_name),
         stringResource(R.string.settings_tab_debug_name)
     )
@@ -163,11 +173,12 @@ fun SettingsContent(
             ) {
                 when (selectedTab) {
                     0 -> GeneralSettings(settings, onUpdateSettings, onClearAllPages, onAppLanguageChange)
-                    1 -> GesturesSettings(
+                    1 -> SyncSettings(settings, goToGeneral = { selectedTab = 0 })
+                    2 -> GesturesSettings(
                         settings, onUpdateSettings, listOfGestures, availableGestures
                     )
 
-                    2 -> DebugSettings(settings, onUpdateSettings, goToWelcome, goToSystemInfo)
+                    3 -> DebugSettings(settings, onUpdateSettings, goToWelcome, goToSystemInfo)
                 }
             }
 

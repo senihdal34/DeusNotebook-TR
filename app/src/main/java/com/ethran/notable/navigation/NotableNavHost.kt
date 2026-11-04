@@ -76,6 +76,11 @@ fun NotableNavHost(
             ) {
                 WelcomeView(
                     goToLibrary = { appNavigator.goToHome() },
+                    goToSyncSetup = {
+                        appNavigator.goToHome()
+                        com.ethran.notable.ui.views.SettingsTabs.request = com.ethran.notable.ui.views.SettingsTabs.SYNC
+                        appNavigator.navController.navigate(SettingsDestination.route)
+                    },
                 )
                 appNavigator.cleanCurrentPageId()
             }
