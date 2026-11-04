@@ -22,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavController
 import com.ethran.notable.data.AppRepository
+import com.ethran.notable.data.PageDataManager
 import com.ethran.notable.data.datastore.EditorSettingCacheManager
 import com.ethran.notable.editor.state.EditorState
 import com.ethran.notable.editor.state.History
@@ -196,13 +197,19 @@ fun EditorView(
                 val h = height.toFloat()
                 val book = bookId?.let { appRepository.bookRepository.getById(it) } ?: return@runCatching
                 val pages = book.pageIds.chunked(400).flatMap { appRepository.pageRepository.getByIds(it) }
-                if (monday != null) {
+                val changed = if (monday != null) {
                     val dayPages = pages.mapNotNull { p -> PlannerWeeks.parseDay(p.background)?.let { it to p.id } }
                         .filter { PlannerWeeks.mondayOf(it.first) == monday }.toMap()
-                    PlannerSync.weekToDays(appRepository, context.filesDir, fromPageId, monday, h, dayPages)
+                    PlannerSync.weekToDays(appRepository.plannerSync, fromPageId, monday, h, dayPages, emptySet())
                 } else if (day != null) {
                     val week = pages.firstOrNull { PlannerWeeks.parseWeek(it.background) == PlannerWeeks.mondayOf(day) } ?: return@runCatching
-                    PlannerSync.dayToWeek(appRepository, context.filesDir, fromPageId, day, week.id, h)
+                    PlannerSync.dayToWeek(appRepository.plannerSync, fromPageId, day, week.id, h, emptySet())
+                } else emptySet()
+                // A changed page is shown from its saved preview and the memory cache: drop both so it is drawn from the strokes.
+                for (id in changed) {
+                    java.io.File(context.filesDir, "pages/previews/full/$id").delete()
+                    java.io.File(context.filesDir, "pages/previews/thumbs/$id").delete()
+                    PageDataManager.removePage(id)
                 }
             }
         }
