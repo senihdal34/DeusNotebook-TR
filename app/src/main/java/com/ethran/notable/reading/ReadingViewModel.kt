@@ -44,9 +44,14 @@ class ReadingViewModel @Inject constructor(@ApplicationContext private val conte
     private val chapterRepo = ChapterRepository(File(context.filesDir, "reading-chapters"))
     private var chaptersJob: Job? = null
 
-    /** Reads NeoReader's data off the main thread; the last data stays on screen while it loads or if reading fails. */
+    private val refreshes = OneAtATime()
+
+    /**
+     * Reads NeoReader's data off the main thread; the last data stays on screen while it loads or if reading fails.
+     * A call while a refresh runs is dropped: opening the tab and resuming Home both ask for one at the same moment.
+     */
     fun refresh() {
-        viewModelScope.launch(Dispatchers.IO) {
+        refreshes.launch(viewModelScope, Dispatchers.IO) {
             val books = NeoReaderSource.library(context)
             val events = NeoReaderSource.events(context)
             val highlights = NeoReaderSource.highlights(context)
@@ -76,7 +81,7 @@ class ReadingViewModel @Inject constructor(@ApplicationContext private val conte
         _ui.update { it.copy(chapters = ChapterState.Loading(book.id)) }
         chaptersJob = viewModelScope.launch(Dispatchers.IO) {
             val result = chapterRepo.load(File(book.path))
-            Log.i(TAG, "chapters for ${File(book.path).name}: " + when (result) {
+            Log.i(TAG, "chapters: " + when (result) {
                 is com.ethran.notable.reading.chapters.ChapterResult.Found -> "${result.map.entries.size} entries (${result.map.source})"
                 is com.ethran.notable.reading.chapters.ChapterResult.None -> "none, ${result.reason.short}"
             })
@@ -104,7 +109,7 @@ class ReadingViewModel @Inject constructor(@ApplicationContext private val conte
             val n = ReadingCovers.copy(src, dest, names)
             if (n > 0) Log.i(TAG, "copied $n covers into $OWN_COVERS")
         } catch (e: Exception) {
-            Log.w(TAG, "could not copy covers: ${e.javaClass.simpleName}: ${e.message}")
+            Log.w(TAG, "could not copy covers: ${e.javaClass.simpleName}")
         }
     }
 

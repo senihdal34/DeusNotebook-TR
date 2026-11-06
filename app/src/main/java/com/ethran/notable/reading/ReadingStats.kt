@@ -75,12 +75,13 @@ object ReadingStats {
         // Per book: last read time, progress snapshot, average seconds per page.
         val lastRead = HashMap<String, Long>()
         val snapshot = HashMap<String, Double>()
+        val snapshotAt = HashMap<String, Long>()          // the log comes in no set order: the newest snapshot wins
         val pagesRead = HashMap<String, Int>()
         val msRead = HashMap<String, Long>()
         for (e in events) {
             val p = pathOf(e)?.takeIf(byPath::containsKey) ?: continue
             if (e.type == 1 || e.type == 0 || e.type == 5) lastRead[p] = maxOf(lastRead[p] ?: 0L, e.time)
-            if (e.type == 5) snapshot[p] = e.progressPct
+            if (e.type == 5 && e.time >= (snapshotAt[p] ?: Long.MIN_VALUE)) { snapshot[p] = e.progressPct; snapshotAt[p] = e.time }
             if (e.type == 1) { pagesRead[p] = (pagesRead[p] ?: 0) + 1; msRead[p] = (msRead[p] ?: 0L) + e.durationMs.coerceIn(0L, PAGE_CAP_MS) }
         }
 

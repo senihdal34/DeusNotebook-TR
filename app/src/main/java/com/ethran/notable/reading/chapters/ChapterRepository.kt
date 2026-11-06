@@ -1,5 +1,6 @@
 package com.ethran.notable.reading.chapters
 
+import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -51,7 +52,14 @@ class ChapterRepository(private val dir: File, private val reader: (File) -> Cha
         val key = keyOf(file.path, size, mtime)
         memory[key]?.let { return it }
         readCache(key, file.path, size, mtime)?.let { memory[key] = it; return it }
-        val result = try { reader(file) } catch (e: RuntimeException) { ChapterResult.None(NoChapters.Unreadable) }
+        val result = try {
+            reader(file)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Throwable) {
+            // A hostile file (deep nesting, a huge allocation) must not crash the board each time it opens: it has no chapters.
+            ChapterResult.None(NoChapters.Unreadable)
+        }
         memory[key] = result
         writeCache(key, file.path, size, mtime, result)
         return result

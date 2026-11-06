@@ -53,6 +53,8 @@ object PdfOutline {
             PdfOutlineResult.Unreadable("${e.javaClass.simpleName}: ${e.message}")
         } catch (e: OutOfMemoryError) {
             PdfOutlineResult.Unreadable("out of memory")
+        } catch (e: StackOverflowError) {
+            PdfOutlineResult.Unreadable("nesting too deep")
         }
     }
 
@@ -119,10 +121,11 @@ object PdfOutline {
         val count: Int
         init {
             var n = 0
-            // Depth-first, in page order. A node whose /Count equals its number of kids has only pages below it.
+            // Depth-first, in page order, with a stack of its own: a hostile file can nest one-kid nodes thousands deep.
+            // A node whose /Count equals its number of kids has only pages below it.
             val seen = HashSet<Int>()
-            fun visit(node: PdfDict, nodeNum: Int?) {
-                if (n >= MAX_PAGES) return
+            val stack = ArrayDeque<Iterator<Any?>>()
+            fun open(node: PdfDict, nodeNum: Int?) {
                 val kids = doc.resolve(node["Kids"]) as? List<*>
                 if (kids == null) { if (nodeNum != null) index[nodeNum] = n; n++; return }
                 val declared = doc.resolve(node["Count"]).asInt()
@@ -133,16 +136,22 @@ object PdfOutline {
                     val d = ref?.let { doc.resolve(it) as? PdfDict }
                     d != null && d["Kids"] == null
                 }
+                if (!allPages) { stack.addLast(kids.iterator()); return }
                 for (k in kids) {
                     if (n >= MAX_PAGES) return
                     val ref = k as? PdfRef ?: continue
-                    if (!seen.add(ref.num)) continue
-                    if (allPages) { index[ref.num] = n; n++; continue }
-                    val child = doc.resolve(ref) as? PdfDict ?: continue
-                    visit(child, ref.num)
+                    if (seen.add(ref.num)) { index[ref.num] = n; n++ }
                 }
             }
-            visit(root, (rootRef as? PdfRef)?.num)
+            open(root, (rootRef as? PdfRef)?.num)
+            while (stack.isNotEmpty() && n < MAX_PAGES) {
+                val kids = stack.last()
+                if (!kids.hasNext()) { stack.removeLast(); continue }
+                val ref = kids.next() as? PdfRef ?: continue
+                if (!seen.add(ref.num)) continue
+                val child = doc.resolve(ref) as? PdfDict ?: continue
+                open(child, ref.num)
+            }
             count = n
         }
         fun indexOf(objNum: Int): Int = index[objNum] ?: -1

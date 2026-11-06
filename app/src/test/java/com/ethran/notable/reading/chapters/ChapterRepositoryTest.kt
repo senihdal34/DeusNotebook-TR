@@ -85,6 +85,16 @@ class ChapterRepositoryTest {
         assertEquals(ChapterResult.None(NoChapters.Unreadable), repo.load(book()))
     }
 
+    @Test fun aReaderThatOverflowsTheStackGivesUnreadableNotACrash() {
+        val repo = ChapterRepository(File(tmp.root, "cache")) { throw StackOverflowError() }
+        assertEquals(ChapterResult.None(NoChapters.Unreadable), repo.load(book()))
+    }
+
+    @Test(expected = kotlinx.coroutines.CancellationException::class)
+    fun cancellationIsNotTurnedIntoNoChapters() {
+        ChapterRepository(File(tmp.root, "cache")) { throw kotlinx.coroutines.CancellationException("gone") }.load(book())
+    }
+
     @Test fun anUnwritableCacheFolderOnlyCostsTheRereading() {
         val blocker = tmp.newFile("not-a-dir")
         val reader = Counting(found)
