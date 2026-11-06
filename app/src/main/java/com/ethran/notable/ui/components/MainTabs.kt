@@ -18,17 +18,17 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import java.util.Locale
 
-enum class MainTab { Week, Notes, Pinned }
+enum class MainTab { Week, Notes, Pinned, Reading }
 
-/** The PLANNER | NOTES | ★ FAVORITES bar. The same bar sits under the header on Home and on the planner pages. */
+/** The Planner | Notes | ★ Favorites | Reading bar (title case). The same bar sits under the header on Home and on the planner pages. */
 @Composable
-fun MainTabs(active: MainTab?, onWeek: () -> Unit, onNotes: () -> Unit, onPinned: () -> Unit, modifier: Modifier = Modifier) {
+fun MainTabs(active: MainTab?, onWeek: () -> Unit, onNotes: () -> Unit, onPinned: () -> Unit, onReading: () -> Unit, modifier: Modifier = Modifier) {
     Row(modifier, horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
         Tab("Planner", active == MainTab.Week, last = false, onClick = onWeek)
         Tab("Notes", active == MainTab.Notes, last = false, onClick = onNotes)
-        Tab("★ Favorites", active == MainTab.Pinned, last = true, onClick = onPinned)
+        Tab("★ Favorites", active == MainTab.Pinned, last = false, onClick = onPinned)
+        Tab("Reading", active == MainTab.Reading, last = true, onClick = onReading)
     }
 }
 
@@ -37,12 +37,12 @@ private fun Tab(label: String, on: Boolean, last: Boolean, onClick: () -> Unit) 
     Box(
         Modifier.height(54.dp)
             .clickable(interactionSource = MutableInteractionSource(), indication = null, onClick = onClick)
-            .background(if (on) Color(0xFF111111) else Color.Transparent).padding(horizontal = 34.dp),
+            .background(if (on) Color(0xFF111111) else Color.Transparent).padding(horizontal = 26.dp),
         contentAlignment = Alignment.Center
     ) {
         Text(
-            label.uppercase(Locale("tr", "TR")), fontFamily = FontFamily.SansSerif, fontSize = 20.sp, fontWeight = FontWeight.SemiBold,
-            letterSpacing = 2.8.sp, color = if (on) Color.White else Color(0xFF111111)
+            label, fontFamily = FontFamily.SansSerif, fontSize = 22.sp, fontWeight = FontWeight.SemiBold,
+            letterSpacing = 0.4.sp, color = if (on) Color.White else Color(0xFF111111)
         )
     }
     if (!last && !on) Box(Modifier.width(1.5.dp).height(26.dp).background(Color(0xFF999999)))

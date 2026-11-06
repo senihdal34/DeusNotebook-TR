@@ -18,7 +18,6 @@ object PlannerLayout {
     const val BOTTOM_MARGIN = 40f
     const val MIN_LINES = 5
     private const val MIN_STEP = 64f
-    const val DAY_STEP = 80f
 
     data class Week(val rowH: Float, val lines: Int) {
         val step get() = rowH / lines
@@ -31,8 +30,25 @@ object PlannerLayout {
         return Week(rowH, max(MIN_LINES, floor(rowH / MIN_STEP).toInt()))
     }
 
+    /** A day page uses the week's line step, so its first lines coincide with the day's row on the week page. */
+    fun dayStep(pageHeight: Float): Float = week(pageHeight).step
+
     /** Number of to-do lines on a day page. */
-    fun dayLines(pageHeight: Float): Int = max(8, floor((pageHeight - ROWS_TOP - BOTTOM_MARGIN) / DAY_STEP).toInt())
+    fun dayLines(pageHeight: Float): Int = max(8, floor((pageHeight - ROWS_TOP - BOTTOM_MARGIN) / dayStep(pageHeight)).toInt())
+
+    /** Horizontal start of a check box, the same on the week and the day page. */
+    const val BOX_X = LABEL_W + 28f
+
+    fun boxSize(step: Float) = step * 0.46f
+    fun boxBottom(rowTop: Float, line: Int, step: Float) = rowTop + line * step - step * 0.2f
+
+    data class Zone(val x: Float, val y: Float, val w: Float, val h: Float)
+
+    /** Where a tap ticks line [line] (1-based) of a row starting at [rowTop]: the check box and a thin margin, never the writing area. */
+    fun boxZone(rowTop: Float, line: Int, step: Float, margin: Float = 10f): Zone {
+        val size = boxSize(step)
+        return Zone(BOX_X - margin, boxBottom(rowTop, line, step) - size - margin, size + 2 * margin, size + 2 * margin)
+    }
 
     /** Vertical band of a row that holds the date number (the only part that opens the day). */
     fun numberTop(week: Week, i: Int) = week.rowTop(i) + week.rowH * 0.32f

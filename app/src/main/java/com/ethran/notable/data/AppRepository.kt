@@ -29,7 +29,9 @@ class AppRepository @Inject constructor(
     val annotationRepository: AnnotationRepository,
     val folderRepository: FolderRepository,
     val kvProxy: KvProxy,
-    val pageTags: PageTagRepository
+    val pageTags: PageTagRepository,
+    val plannerDone: com.ethran.notable.planner.PlannerDoneRepository,
+    val plannerSync: com.ethran.notable.planner.RoomPlannerSyncStore
 ) {
     suspend fun getNextPageIdFromBookAndPageOrCreate(
         notebookId: String,

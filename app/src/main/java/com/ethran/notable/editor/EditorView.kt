@@ -32,6 +32,9 @@ import com.ethran.notable.editor.ui.HorizontalScrollIndicator
 import com.ethran.notable.editor.ui.InboxToolbar
 import com.ethran.notable.editor.ui.PlannerWeekBar
 import com.ethran.notable.editor.ui.PlannerDayBar
+import com.ethran.notable.editor.ui.PlannerBackPill
+import com.ethran.notable.planner.ExitSyncGuard
+import com.ethran.notable.planner.PlannerSync
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.offset
@@ -60,6 +63,7 @@ import com.ethran.notable.ui.theme.InkaTheme
 import com.ethran.notable.ui.views.LibraryDestination
 import io.shipbook.shipbooksdk.ShipBook
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -185,18 +189,66 @@ fun EditorView(
 
         // Week tool of the planner page: move to another week's page inside this notebook.
         val plannerService = remember { PlannerService(appRepository) }
-        fun goToDay(day: LocalDate) {
-            scope.launch {
-                val target = withContext(Dispatchers.IO) { runCatching { plannerService.ensureDay(day) }.getOrNull() }
-                if (target != null && target.pageId != pageId) CanvasEventBus.changePage.tryEmit(target.pageId)
+
+        // Keeps a day's first lines equal on the week page and the day page: leaving one merges it with its counterpart.
+        // Runs in the planner's own scope (not this composition's), one sync at a time, never changing the open page.
+        fun syncPlannerPage(fromPageId: String, monday: LocalDate?, day: LocalDate?): Job? {
+            if (monday == null && day == null) return null
+            val h = height.toFloat()
+            return PlannerSync.run(context.filesDir, openPages = { setOf(page.currentPageId) }) { frozen ->
+                val book = bookId?.let { appRepository.bookRepository.getById(it) } ?: return@run emptySet()
+                val pages = book.pageIds.chunked(400).flatMap { appRepository.pageRepository.getByIds(it) }
+                val store = appRepository.plannerSync
+                if (monday != null) {
+                    val dayPages = pages.mapNotNull { p -> PlannerWeeks.parseDay(p.background)?.let { it to p.id } }
+                        .filter { PlannerWeeks.mondayOf(it.first) == monday }.toMap()
+                    PlannerSync.weekToDays(store, fromPageId, monday, h, dayPages, frozen)
+                } else {
+                    val d = day ?: return@run emptySet()
+                    val week = pages.firstOrNull { PlannerWeeks.parseWeek(it.background) == PlannerWeeks.mondayOf(d) } ?: return@run emptySet()
+                    PlannerSync.dayToWeek(store, fromPageId, d, week.id, h, frozen)
+                }
             }
         }
-        fun goToWeek(monday: LocalDate) {
-            scope.launch {
-                val target = withContext(Dispatchers.IO) { runCatching { plannerService.ensureWeek(monday) }.getOrNull() }
-                if (target != null && target.pageId != pageId) CanvasEventBus.changePage.tryEmit(target.pageId)
+        // One sync per page exit: the week tool syncs before it switches (so the page it opens already shows the copies)
+        // and marks that exit done, so the cleanup below does not sync it a second time.
+        val exitSynced = remember { ExitSyncGuard() }
+        DisposableEffect(pageId, plannerMonday, plannerDay) {
+            val pid = pageId; val m = plannerMonday; val d = plannerDay
+            onDispose {
+                if (m == null && d == null) return@onDispose
+                if (exitSynced.takeNeedsSync(pid)) syncPlannerPage(pid, m, d)
             }
         }
+        // Ticked lines are drawn struck through; load them for the page and redraw once they are known.
+        LaunchedEffect(plannerMonday, plannerDay) {
+            val dates = plannerMonday?.let { m -> (0L..6L).map { m.plusDays(it) } } ?: plannerDay?.let { listOf(it) } ?: return@LaunchedEffect
+            withContext(Dispatchers.IO) { runCatching { appRepository.plannerDone.load(dates) } }
+            if (dates.any { com.ethran.notable.planner.PlannerDone.lines(it).isNotEmpty() }) {
+                page.applyZoomAndRedraw(page.zoomLevel.value)
+                CanvasEventBus.refreshUiImmediately.emit(Unit)
+            }
+        }
+        fun toggleDone(date: LocalDate, line: Int) {
+            scope.launch {
+                withContext(Dispatchers.IO) { runCatching { appRepository.plannerDone.toggle(date, line) } }
+                page.applyZoomAndRedraw(page.zoomLevel.value)
+                CanvasEventBus.refreshUiImmediately.emit(Unit)
+            }
+        }
+        fun goTo(ensure: suspend () -> PlannerService.Target) {
+            val from = pageId; val m = plannerMonday; val d = plannerDay
+            scope.launch {
+                // Create the target first, so a day page opened for the first time also gets the week row's ink.
+                val target = withContext(Dispatchers.IO) { runCatching { ensure() }.getOrNull() }
+                if (target == null || target.pageId == from) return@launch
+                syncPlannerPage(from, m, d)?.join()
+                exitSynced.markSynced(from)
+                if (!CanvasEventBus.changePage.tryEmit(target.pageId)) exitSynced.markSynced(null)
+            }
+        }
+        fun goToDay(day: LocalDate) = goTo { plannerService.ensureDay(day) }
+        fun goToWeek(monday: LocalDate) = goTo { plannerService.ensureWeek(monday) }
 
         DisposableEffect(Unit) {
             onDispose {
@@ -302,7 +354,8 @@ fun EditorView(
                                         active = com.ethran.notable.ui.components.MainTab.Week,
                                         onWeek = { goToWeek(PlannerWeeks.mondayOf(plannerDay ?: LocalDate.now())) },
                                         onNotes = { toHome(com.ethran.notable.ui.viewmodels.HomeSection.Notes) },
-                                        onPinned = { toHome(com.ethran.notable.ui.viewmodels.HomeSection.Pinned) }
+                                        onPinned = { toHome(com.ethran.notable.ui.viewmodels.HomeSection.Pinned) },
+                                        onReading = { toHome(com.ethran.notable.ui.viewmodels.HomeSection.Reading) }
                                     )
                                 }
                             }
@@ -315,6 +368,19 @@ fun EditorView(
                             val heightPx = constraints.maxHeight.toFloat()
                             val layout = com.ethran.notable.planner.PlannerLayout.week(heightPx)
                             with(density) {
+                                // Check boxes: a tap ticks the line (struck through, shared with that day's page).
+                                for (i in 0 until 7) for (k in 1..layout.lines) {
+                                    val zone = com.ethran.notable.planner.PlannerLayout.boxZone(layout.rowTop(i), k, layout.step)
+                                    Box(
+                                        Modifier
+                                            .offset(zone.x.toDp(), zone.y.toDp())
+                                            .size(zone.w.toDp(), zone.h.toDp())
+                                            .clickable(
+                                                interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
+                                                indication = null
+                                            ) { toggleDone(monday.plusDays(i.toLong()), k) }
+                                    )
+                                }
                                 for (i in 0 until 7) {
                                     Box(
                                         Modifier
@@ -337,6 +403,27 @@ fun EditorView(
                         )
                     }
                     plannerDay?.let { day ->
+                        androidx.compose.foundation.layout.BoxWithConstraints(Modifier.fillMaxSize()) {
+                            val density = androidx.compose.ui.platform.LocalDensity.current
+                            val heightPx = constraints.maxHeight.toFloat()
+                            val layout = com.ethran.notable.planner.PlannerLayout.week(heightPx)
+                            val lines = com.ethran.notable.planner.PlannerLayout.dayLines(heightPx)
+                            with(density) {
+                                for (k in 1..lines) {
+                                    val zone = com.ethran.notable.planner.PlannerLayout.boxZone(com.ethran.notable.planner.PlannerLayout.ROWS_TOP, k, layout.step)
+                                    Box(
+                                        Modifier
+                                            .offset(zone.x.toDp(), zone.y.toDp())
+                                            .size(zone.w.toDp(), zone.h.toDp())
+                                            .clickable(
+                                                interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
+                                                indication = null
+                                            ) { toggleDone(day, k) }
+                                    )
+                                }
+                            }
+                        }
+                        PlannerBackPill(onClick = { goToWeek(PlannerWeeks.mondayOf(day)) }, modifier = Modifier.align(Alignment.TopStart))
                         PlannerDayBar(
                             onWeek = { goToWeek(PlannerWeeks.mondayOf(day)) },
                             onPrevious = { goToDay(day.minusDays(1)) },
