@@ -4,6 +4,9 @@ import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.temporal.IsoFields
 import java.time.temporal.TemporalAdjusters
+import java.time.format.TextStyle
+import java.util.Locale
+import com.ethran.notable.i18n.AppStrings
 
 /** Dates and labels of the weekly planner. Everything comes from the device clock, no network. */
 object PlannerWeeks {
@@ -13,16 +16,16 @@ object PlannerWeeks {
     const val WEEK_PREFIX = "planner-week:"
     /** To-do/notes page of the first version; no longer created, pages that have ink still draw. */
     const val TODO_PREFIX = "planner-todo:"
-    const val NOTEBOOK_TITLE = "Planlayıcı"
     /** Weeks created in advance after the current one, so swiping to the next page stays inside the planner. */
     const val WEEKS_AHEAD = 8
 
-    val DAY_NAMES = listOf("Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz")
-    val DAY_FULL = listOf("Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar")
-    private val MONTHS = listOf("Oca", "Şub", "Mar", "Nis", "May", "Haz", "Tem", "Ağu", "Eyl", "Eki", "Kas", "Ara")
-    private val MONTHS_FULL = listOf(
-        "Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"
-    )
+    /** Short weekday name ("Mon", "Pzt", "周一"), [idx] 0 = Monday. */
+    fun dayName(idx: Int, locale: Locale = AppStrings.locale): String =
+        DayOfWeek.of(idx + 1).getDisplayName(TextStyle.SHORT, locale)
+
+    /** Full weekday name, [idx] 0 = Monday. */
+    fun dayFull(idx: Int, locale: Locale = AppStrings.locale): String =
+        DayOfWeek.of(idx + 1).getDisplayName(TextStyle.FULL, locale)
 
     fun mondayOf(date: LocalDate): LocalDate = date.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
 
@@ -63,12 +66,17 @@ object PlannerWeeks {
     /** Share of the calendar year that is over at the end of [date], 0..100. */
     fun yearPercent(date: LocalDate): Int = Math.round(date.dayOfYear * 100f / date.lengthOfYear())
 
-    fun shortDate(d: LocalDate) = "${d.dayOfMonth} ${MONTHS[d.monthValue - 1]}"
-    fun monthName(d: LocalDate) = MONTHS_FULL[d.monthValue - 1]
+    /** "26 Oct", "26 Eki"; Chinese reads "10月26日". */
+    fun shortDate(d: LocalDate, locale: Locale = AppStrings.locale): String =
+        if (locale.language == "zh") "${d.monthValue}月${d.dayOfMonth}日"
+        else "${d.dayOfMonth} ${d.month.getDisplayName(TextStyle.SHORT, locale)}"
 
-    /** "26 Eki – 1 Kas" */
-    fun rangeLabel(monday: LocalDate) = "${shortDate(monday)} – ${shortDate(monday.plusDays(6))}"
+    fun monthName(d: LocalDate, locale: Locale = AppStrings.locale): String = d.month.getDisplayName(TextStyle.FULL, locale)
 
-    /** "26 Eki – 1 Kas · 44/52" */
-    fun weekLabel(monday: LocalDate) = "${rangeLabel(monday)} · ${weekOfYear(monday)}"
+    /** "26 Oct – 1 Nov" */
+    fun rangeLabel(monday: LocalDate, locale: Locale = AppStrings.locale) =
+        "${shortDate(monday, locale)} – ${shortDate(monday.plusDays(6), locale)}"
+
+    /** "26 Oct – 1 Nov · 44/52" */
+    fun weekLabel(monday: LocalDate, locale: Locale = AppStrings.locale) = "${rangeLabel(monday, locale)} · ${weekOfYear(monday)}"
 }

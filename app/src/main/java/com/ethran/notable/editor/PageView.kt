@@ -55,6 +55,8 @@ import kotlin.math.ceil
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.system.measureTimeMillis
+import com.ethran.notable.R
+import com.ethran.notable.i18n.AppStrings
 
 const val OVERLAP = 2
 
@@ -284,7 +286,7 @@ class PageView(
         loadingJob = coroutineScope.launch(Dispatchers.IO) {
             try {
                 val bookId = pageFromDb?.notebookId
-                snackManager.showSnackDuring(text = "Loading strokes...") {
+                snackManager.showSnackDuring(text = AppStrings.get(R.string.snack_loading_strokes)) {
                     val timeToLoad = measureTimeMillis {
                         logCache.d("Start page, id $currentPageId")
                         PageDataManager.requestPageLoadJoin(appRepository, currentPageId, bookId)

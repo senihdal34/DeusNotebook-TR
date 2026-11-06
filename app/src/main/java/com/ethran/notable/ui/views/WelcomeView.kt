@@ -74,6 +74,7 @@ object WelcomeDestination : NavigationDestination {
 @Composable
 fun WelcomeView(
     goToLibrary: () -> Unit = {},
+    goToSyncSetup: () -> Unit = {},
     viewModel: WelcomeViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
@@ -134,6 +135,12 @@ fun WelcomeView(
                 viewModel.removeWelcome()
             }
             goToLibrary()
+        },
+        onSetupSync = {
+            scope.launch(Dispatchers.IO) {
+                viewModel.removeWelcome()
+            }
+            goToSyncSetup()
         }
     )
 }
@@ -145,7 +152,8 @@ fun WelcomeContent(
     refreshModeString: String,
     onFilePermissionRequest: () -> Unit,
     onRefreshModeRequest: () -> Unit,
-    onContinue: () -> Unit
+    onContinue: () -> Unit,
+    onSetupSync: () -> Unit = {}
 ) {
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -176,6 +184,7 @@ fun WelcomeContent(
             ) {
                 Column {
                     OnyxUnfreezeInstruction()
+                    SyncOnboardingCard(enabled = filePermissionGranted, onSetupSync = onSetupSync)
                     ShowInstructions()
                 }
             }
@@ -198,6 +207,33 @@ fun WelcomeContent(
             }
 
             Spacer(modifier = Modifier.height(30.dp))
+        }
+    }
+}
+
+/** Optional step for new users: send the notes to a computer with Syncthing (the guide is Settings, Sync). */
+@Composable
+private fun SyncOnboardingCard(enabled: Boolean, onSetupSync: () -> Unit) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 12.dp),
+        elevation = 0.dp,
+        backgroundColor = MaterialTheme.colors.surface,
+        shape = RoundedCornerShape(8.dp)
+    ) {
+        Column(Modifier.padding(18.dp).fillMaxWidth()) {
+            Text(
+                stringResource(R.string.welcome_sync_title),
+                style = MaterialTheme.typography.h6, fontWeight = FontWeight.Bold, color = MaterialTheme.colors.onSurface
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                stringResource(R.string.welcome_sync_body),
+                style = MaterialTheme.typography.body2, color = MaterialTheme.colors.onSurface, lineHeight = 18.sp
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            Button(onClick = onSetupSync, enabled = enabled) { Text(stringResource(R.string.welcome_sync_button)) }
         }
     }
 }

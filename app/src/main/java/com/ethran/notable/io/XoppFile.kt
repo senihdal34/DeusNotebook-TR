@@ -51,6 +51,8 @@ import javax.xml.transform.OutputKeys
 import javax.xml.transform.TransformerFactory
 import javax.xml.transform.dom.DOMSource
 import javax.xml.transform.stream.StreamResult
+import com.ethran.notable.R
+import com.ethran.notable.i18n.AppStrings
 
 // I do not know what pressureFactor should be, I just guest it.
 // it's used to get strokes look relatively good in xournal++
@@ -175,7 +177,7 @@ class XoppFile @Inject constructor(
                 imgElement.textContent = convertImageToBase64(image.uri, context)
             }
             if (imgElement.textContent.isNotBlank()) layer.appendChild(imgElement)
-            else showHint("Image cannot be loaded.")
+            else showHint(AppStrings.get(R.string.hint_image_load_failed))
         }
 
         val xmlString = convertXmlToString(doc)

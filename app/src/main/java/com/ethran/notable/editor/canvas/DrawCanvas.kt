@@ -27,6 +27,8 @@ import com.onyx.android.sdk.api.device.epd.EpdController
 import io.shipbook.shipbooksdk.Log
 import io.shipbook.shipbooksdk.ShipBook
 import kotlinx.coroutines.CoroutineScope
+import com.ethran.notable.R
+import com.ethran.notable.i18n.AppStrings
 
 
 val pressure = EpdController.getMaxTouchPressure()
@@ -57,7 +59,7 @@ class DrawCanvas(
                     com.ethran.notable.editor.state.Mode.Erase else com.ethran.notable.editor.state.Mode.Draw
                 log.i("PENBTN toggled to ${state.mode}")
                 com.ethran.notable.ui.showHint(
-                    if (state.mode == com.ethran.notable.editor.state.Mode.Erase) "Silgi" else "Kalem", coroutineScope, 900
+                    AppStrings.get(if (state.mode == com.ethran.notable.editor.state.Mode.Erase) R.string.hint_eraser else R.string.hint_pen), coroutineScope, 900
                 )
             }
         }

@@ -35,6 +35,10 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
+import com.ethran.notable.reading.RS
+import com.ethran.notable.reading.ReadingDates
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
@@ -126,12 +130,16 @@ fun DustWidget(c: BoardCtx, w: Int, hh: Int) {
     val ih = hh - 2 * pad
     val book = c.d.dust(c.dustSkip)
     if (book == null) {
-        HintTile(w, hh, "Gathering dust", "Books you download and never open collect dust here.")
+        HintTile(w, hh, stringResource(R.string.reading_gathering_dust), stringResource(R.string.reading_dust_empty))
         return
     }
     val days = max(1L, (c.nowMs - book.addedAt) / 86_400_000L).toInt()
     val months = days / 30
-    val since = if (months >= 1) "Never opened in $months ${if (months == 1) "month" else "months"}" else "Never opened in $days ${if (days == 1) "day" else "days"}"
+    val since = if (months >= 1) pluralStringResource(R.plurals.reading_never_opened_months, months, months) else pluralStringResource(R.plurals.reading_never_opened_days, days, days)
+    val dustLabel = stringResource(R.string.reading_gathering_dust)
+    val openCd = stringResource(R.string.reading_open_book_cd)
+    val nextCd = stringResource(R.string.reading_next_dusty_cd)
+    val openText = stringResource(R.string.reading_open)
     val coverH = ih
     val coverW = Math.round(ih * 2 / 3f)
     val tw = iw - coverW - bx.px(12)
@@ -160,17 +168,17 @@ fun DustWidget(c: BoardCtx, w: Int, hh: Int) {
                 Canvas(Modifier.size(bx.d(coverW), bx.d(coverH))) { drawDust(coverW.toFloat(), coverH.toFloat(), seed, bx) }
             }
             Column(Modifier.width(bx.d(tw)).height(bx.d(ih))) {
-                if (v.label) BText("Gathering dust", 12.0, color = Ink.g4, w = tw)
+                if (v.label) BText(dustLabel, 12.0, color = Ink.g4, w = tw)
                 BText(book.title, 14.0, bold = true, serif = true, lines = v.titleLines, w = tw)
                 if (v.since) BText(since, 12.0, color = Ink.g4, lines = 2, w = tw)
                 Flex()
                 if (v.buttons) Row(horizontalArrangement = Arrangement.spacedBy(bx.dd(8)), verticalAlignment = Alignment.CenterVertically) {
                     val h = bx.px(30)
                     Row(
-                        Modifier.height(bx.d(h)).semantics { contentDescription = "Open book" }.clip(RoundedCornerShape(bx.d(h / 2))).background(Ink.black).tapOrHold({ c.onOpen(book) }),
+                        Modifier.height(bx.d(h)).semantics { contentDescription = openCd }.clip(RoundedCornerShape(bx.d(h / 2))).background(Ink.black).tapOrHold({ c.onOpen(book) }),
                         verticalAlignment = Alignment.CenterVertically
-                    ) { HGap(bx.px(10)); Ic("book-open", 15, Ink.white, 2.5f); HGap(bx.px(6)); BText("Open", 13.0, bold = true, color = Ink.white); HGap(bx.px(12)) }
-                    BCircle(h, bg = Ink.white, border = max(1, bx.px(1.5)), modifier = Modifier.semantics { contentDescription = "Next dusty book" }.tapOrHold({ c.onDustNext() })) { Ic("arrow-right", 15, Ink.black, 2.25f) }
+                    ) { HGap(bx.px(10)); Ic("book-open", 15, Ink.white, 2.5f); HGap(bx.px(6)); BText(openText, 13.0, bold = true, color = Ink.white); HGap(bx.px(12)) }
+                    BCircle(h, bg = Ink.white, border = max(1, bx.px(1.5)), modifier = Modifier.semantics { contentDescription = nextCd }.tapOrHold({ c.onDustNext() })) { Ic("arrow-right", 15, Ink.black, 2.25f) }
                 }
             }
         }
@@ -230,12 +238,15 @@ private fun buddyKey(p: BuddyPose) = p.name.lowercase()
 fun buddyLines(c: BoardCtx, pose: BuddyPose): List<String> {
     val streak = c.d.streak; val best = c.d.longestStreak; val today = c.d.todayMinutes
     return when (pose) {
-        BuddyPose.Read -> listOf("Reading with you", "${BoardData.duration(today)} today")
-        BuddyPose.Sleep -> listOf("Fast asleep", "Wakes up when you read")
-        BuddyPose.Party -> listOf("$streak ${if (streak == 1) "day" else "days"} in a row!", if (streak >= best) "A new best" else "Your best is $best")
-        BuddyPose.Ribbon -> listOf("Book finished!", c.d.data.books.firstOrNull { it.finishedAt != null }?.title.orEmpty())
-        BuddyPose.Yawn -> listOf("Past bedtime", "${BoardData.duration(today)} read today")
-        BuddyPose.Wait -> listOf("Ready when you are", "Open a book to start")
+        BuddyPose.Read -> listOf(RS.get(R.string.reading_buddy_read_title), RS.get(R.string.reading_buddy_read_sub, BoardData.duration(today)))
+        BuddyPose.Sleep -> listOf(RS.get(R.string.reading_buddy_sleep_title), RS.get(R.string.reading_buddy_sleep_sub))
+        BuddyPose.Party -> listOf(
+            RS.plural(R.plurals.reading_buddy_streak, streak, streak),
+            if (streak >= best) RS.get(R.string.reading_buddy_new_best) else RS.get(R.string.reading_buddy_your_best, best)
+        )
+        BuddyPose.Ribbon -> listOf(RS.get(R.string.reading_buddy_ribbon_title), c.d.data.books.firstOrNull { it.finishedAt != null }?.title.orEmpty())
+        BuddyPose.Yawn -> listOf(RS.get(R.string.reading_buddy_yawn_title), RS.get(R.string.reading_buddy_yawn_sub, BoardData.duration(today)))
+        BuddyPose.Wait -> listOf(RS.get(R.string.reading_buddy_wait_title), RS.get(R.string.reading_buddy_wait_sub))
     }
 }
 
@@ -477,9 +488,10 @@ fun OdometerWidget(c: BoardCtx, w: Int, hh: Int) {
     val red = BoardColour.ink("odometer", Ink.white)
     val shadeLast = if (hot) BoardColour.color(BoardColour.mix(BoardColour.fam("odometer").ink, "#ffffff", 0.3)) else Ink.gd
     val shade = Ink.g3
-    val sinceText = turns?.since?.let { "since " + java.time.Instant.ofEpochMilli(it).atZone(java.time.ZoneId.systemDefault()).let { z -> z.month.getDisplayName(TextStyle.SHORT, Locale.ENGLISH) + " " + z.year } }
+    val sinceText = turns?.since?.let { java.time.Instant.ofEpochMilli(it).atZone(java.time.ZoneId.systemDefault()).let { z -> stringResource(R.string.reading_since, ReadingDates.monthYear(z.month, z.year)) } }
+    val todayWord = stringResource(R.string.reading_today_lower)
     WPad(w, hh, pad) {
-        BHead(iw, "Pages turned", { Ic("book-open", 17, BoardColour.icon("odometer"), iconSw(2.25f)) })
+        BHead(iw, stringResource(R.string.reading_pages_turned), { Ic("book-open", 17, BoardColour.icon("odometer"), iconSw(2.25f)) })
         Flex()
         Row(Modifier.width(bx.d(iw)), horizontalArrangement = Arrangement.Center) {
             Row(horizontalArrangement = Arrangement.spacedBy(bx.d(g))) {
@@ -502,7 +514,7 @@ fun OdometerWidget(c: BoardCtx, w: Int, hh: Int) {
         }
         Flex()
         Row(Modifier.width(bx.d(iw))) {
-            BRuns(listOf(Run("+${BoardData.count(today)}", b = true, color = Ink.black), Run(" today")), 12.0, color = Ink.g4)
+            BRuns(listOf(Run("+${BoardData.count(today)}", b = true, color = Ink.black), Run(" $todayWord")), 12.0, color = Ink.g4)
             Flex()
             if (total > 0 && sinceText != null && iw > bx.px(200)) BText(sinceText, 12.0, color = Ink.g4)
         }
@@ -510,25 +522,28 @@ fun OdometerWidget(c: BoardCtx, w: Int, hh: Int) {
 }
 
 // ============================================================ glyph of the day
-class GlyphSpec(val cp: Int, val name: String, val font: Int?, val label: String, val sample: String? = null)
+/** [name] is the glyph's name in the app language; [label] is the font it is drawn in. */
+class GlyphSpec(val cp: Int, @androidx.annotation.StringRes val nameRes: Int, val font: Int?, val label: String, val sample: String? = null) {
+    val name: String get() = RS.get(nameRes)
+}
 
 val GLYPHS = listOf(
-    GlyphSpec(0x26, "Ampersand", R.font.notoserif_bolditalic, "Noto Serif Bold Italic", "Aa Bb Cc Dd"),
-    GlyphSpec(0x66F8, "Book, to write", null, "Noto Sans CJK SC"),
-    GlyphSpec(0xB6, "Pilcrow", null, "FreeSerif", "Aa Bb Cc Dd"),
-    GlyphSpec(0x0639, "Ain", R.font.notonaskharabic_regular, "Noto Naskh Arabic"),
-    GlyphSpec(0xDF, "Sharp s", R.font.notoserif_italic, "Noto Serif Italic", "Aa Bb Cc Dd"),
-    GlyphSpec(0x0915, "Ka", R.font.notosansdevanagariui_bold, "Noto Sans Devanagari"),
-    GlyphSpec(0xA7, "Section sign", R.font.notoserif_regular, "Noto Serif", "Aa Bb Cc Dd"),
-    GlyphSpec(0x8AAD, "To read", null, "Noto Sans CJK SC"),
-    GlyphSpec(0x0985, "A, in Bengali", R.font.notosansbengaliui_bold, "Noto Sans Bengali"),
-    GlyphSpec(0x40, "At sign", R.font.notosans_bold, "Noto Sans Bold", "Aa Bb Cc Dd"),
-    GlyphSpec(0x05D0, "Alef", null, "FreeSerif"),
-    GlyphSpec(0xF0, "Eth", R.font.notoserif_bolditalic, "Noto Serif Bold Italic", "Aa Bb Cc Dd"),
-    GlyphSpec(0x6587, "Writing", null, "Noto Sans CJK SC"),
-    GlyphSpec(0x03A9, "Omega", R.font.notoserif_regular, "Noto Serif", "Aa Bb Cc Dd"),
-    GlyphSpec(0x0416, "Zhe", R.font.notosans_bold, "Noto Sans Bold"),
-    GlyphSpec(0x017F, "Long s", R.font.notoserif_italic, "Noto Serif Italic", "Aa Bb Cc Dd")
+    GlyphSpec(0x26, R.string.reading_glyph_ampersand, R.font.notoserif_bolditalic, "Noto Serif Bold Italic", "Aa Bb Cc Dd"),
+    GlyphSpec(0x66F8, R.string.reading_glyph_book_write, null, "Noto Sans CJK SC"),
+    GlyphSpec(0xB6, R.string.reading_glyph_pilcrow, null, "FreeSerif", "Aa Bb Cc Dd"),
+    GlyphSpec(0x0639, R.string.reading_glyph_ain, R.font.notonaskharabic_regular, "Noto Naskh Arabic"),
+    GlyphSpec(0xDF, R.string.reading_glyph_sharp_s, R.font.notoserif_italic, "Noto Serif Italic", "Aa Bb Cc Dd"),
+    GlyphSpec(0x0915, R.string.reading_glyph_ka, R.font.notosansdevanagariui_bold, "Noto Sans Devanagari"),
+    GlyphSpec(0xA7, R.string.reading_glyph_section, R.font.notoserif_regular, "Noto Serif", "Aa Bb Cc Dd"),
+    GlyphSpec(0x8AAD, R.string.reading_glyph_to_read, null, "Noto Sans CJK SC"),
+    GlyphSpec(0x0985, R.string.reading_glyph_bengali_a, R.font.notosansbengaliui_bold, "Noto Sans Bengali"),
+    GlyphSpec(0x40, R.string.reading_glyph_at, R.font.notosans_bold, "Noto Sans Bold", "Aa Bb Cc Dd"),
+    GlyphSpec(0x05D0, R.string.reading_glyph_alef, null, "FreeSerif"),
+    GlyphSpec(0xF0, R.string.reading_glyph_eth, R.font.notoserif_bolditalic, "Noto Serif Bold Italic", "Aa Bb Cc Dd"),
+    GlyphSpec(0x6587, R.string.reading_glyph_writing, null, "Noto Sans CJK SC"),
+    GlyphSpec(0x03A9, R.string.reading_glyph_omega, R.font.notoserif_regular, "Noto Serif", "Aa Bb Cc Dd"),
+    GlyphSpec(0x0416, R.string.reading_glyph_zhe, R.font.notosans_bold, "Noto Sans Bold"),
+    GlyphSpec(0x017F, R.string.reading_glyph_long_s, R.font.notoserif_italic, "Noto Serif Italic", "Aa Bb Cc Dd")
 )
 
 /** One a day, in order, counted in the reader's local days. */
@@ -575,7 +590,7 @@ fun GlyphWidget(c: BoardCtx, w: Int, hh: Int) {
             Row(Modifier.width(bx.d(iw)).height(bx.d(ih)), horizontalArrangement = Arrangement.spacedBy(bx.dd(14)), verticalAlignment = Alignment.CenterVertically) {
                 Box(Modifier.width(bx.d(gwMax)).height(bx.d(ih)), contentAlignment = Alignment.Center) { GlyphArt(g, gwMax, ih - bx.px(4), col) }
                 Column(Modifier.width(bx.d(tw))) {
-                    BText("Glyph of the day", 12.0, color = Ink.g4, w = tw)
+                    BText(stringResource(R.string.reading_glyph_of_day), 12.0, color = Ink.g4, w = tw)
                     BText(g.name, 15.0, bold = true, w = tw)
                     BText(g.label, 12.0, w = tw)
                     BText(cp, 11.0, color = Ink.g4, w = tw)
@@ -664,13 +679,14 @@ fun RingsWidget(c: BoardCtx, w: Int, hh: Int) {
     val months = c.d.months
     val any = months.any { it.minutes > 0 }
     val wd = remember { wood() }
-    fun monthName(m: Int, long: Boolean) = java.time.Month.of(m).getDisplayName(if (long) TextStyle.FULL else TextStyle.SHORT, Locale.ENGLISH)
+    fun monthName(m: Int) = ReadingDates.monthAlone(java.time.Month.of(m))
+    val ringsTitle = stringResource(R.string.reading_tree_rings)
     if (!any) {
         val dia = min(bx.px(56), ih - bx.lh1(13) - bx.px(12) - 2 * bx.lh(13))
         WPad(w, hh, pad) {
-            BHead(iw, "Tree rings")
+            BHead(iw, ringsTitle)
             VGap(bx.px(6))
-            BText("A ring grows for every month you read.", 13.0, color = Ink.g4, lines = 3, w = iw)
+            BText(stringResource(R.string.reading_rings_empty), 13.0, color = Ink.g4, lines = 3, w = iw)
             if (dia >= bx.px(28)) {
                 Flex()
                 Row(Modifier.width(bx.d(iw)), horizontalArrangement = Arrangement.Center) { Canvas(Modifier.size(bx.d(dia))) { drawSapling(dia.toFloat(), wd, bx) } }
@@ -680,15 +696,15 @@ fun RingsWidget(c: BoardCtx, w: Int, hh: Int) {
         return
     }
     val peak = months.maxBy { it.minutes }
-    fun hours(m: MonthMinutes) = "${(m.minutes / 60.0 + 0.5).toInt()} h"
+    fun hours(m: MonthMinutes) = RS.get(R.string.reading_duration_h, (m.minutes / 60.0 + 0.5).toInt())
     val capH = bx.lh1(12) + bx.px(8)
     val dia = max(1, min(iw, ih - bx.lh1(13) - bx.px(8) - capH))
     WPad(w, hh, pad, Alignment.CenterHorizontally) {
-        BHead(iw, "Tree rings", { BText("12 months", 12.0, color = Ink.g4) })
+        BHead(iw, ringsTitle, { BText(stringResource(R.string.reading_12_months), 12.0, color = Ink.g4) })
         Flex()
         Canvas(Modifier.size(bx.d(dia))) { drawRings(dia.toFloat(), months, 3, wd, bx) }
         Flex()
-        BRuns(listOf(Run("Widest ring "), Run("${monthName(peak.month, true)}, ${hours(peak)}", b = true, color = Ink.black)), 12.0, color = Ink.g4, w = iw, align = TextAlign.Center)
+        BRuns(listOf(Run(stringResource(R.string.reading_widest_ring) + " "), Run("${monthName(peak.month)}, ${hours(peak)}", b = true, color = Ink.black)), 12.0, color = Ink.g4, w = iw, align = TextAlign.Center)
     }
 }
 

@@ -6,6 +6,7 @@ import android.net.Uri
 import android.os.StrictMode
 import android.util.Log
 import android.widget.Toast
+import com.ethran.notable.R
 import java.io.File
 
 /** Opens a book in NeoReader, the reader the data comes from, at the position it saved. */
@@ -29,7 +30,7 @@ object ReadingLauncher {
     fun open(context: Context, path: String): Boolean {
         val file = File(path)
         if (!file.exists()) {
-            Toast.makeText(context, "The book file is missing", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, RS.get(R.string.reading_book_missing), Toast.LENGTH_SHORT).show()
             return false
         }
         val previous = StrictMode.getVmPolicy()
@@ -42,7 +43,7 @@ object ReadingLauncher {
         } catch (e: Exception) {
             // Only the outcome: the message of a failed start names the file.
             Log.w(TAG, "could not open the book: ${e.javaClass.simpleName}")
-            Toast.makeText(context, "Could not open the book in NeoReader", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, RS.get(R.string.reading_open_failed), Toast.LENGTH_SHORT).show()
             false
         } finally {
             StrictMode.setVmPolicy(previous)

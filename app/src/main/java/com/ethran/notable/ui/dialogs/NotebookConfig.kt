@@ -80,6 +80,7 @@ fun NotebookConfigDialog(
     val book by bookRepository.getByIdLive(bookId).observeAsState()
     val scope = rememberCoroutineScope()
     val snackManager = LocalSnackContext.current
+    val notImplemented = stringResource(R.string.not_implemented)
 
     if (book == null) return
 
@@ -133,8 +134,8 @@ fun NotebookConfigDialog(
     // Confirmation Dialog for Deletion
     if (showDeleteDialog) {
         ShowSimpleConfirmationDialog(
-            title = "Confirm Deletion",
-            message = "Are you sure you want to delete \"${book!!.title}\"?",
+            title = stringResource(R.string.dialog_confirm_deletion),
+            message = stringResource(R.string.dialog_delete_notebook_q, book!!.title),
             onConfirm = {
                 scope.launch {
                     bookRepository.delete(bookId)
@@ -280,12 +281,12 @@ fun NotebookConfigDialog(
                         ) {
                             val typeName =
                                 when (BackgroundType.fromKey(book?.defaultBackgroundType ?: "")) {
-                                    BackgroundType.AutoPdf -> "Observe Pdf"
-                                    BackgroundType.CoverImage -> "Cover Image"
-                                    BackgroundType.Image -> "Image"
-                                    BackgroundType.ImageRepeating -> "Repeating Image"
-                                    BackgroundType.Native -> "Native"
-                                    is BackgroundType.Pdf -> "Static pdf Page"
+                                    BackgroundType.AutoPdf -> stringResource(R.string.bg_type_observe_pdf)
+                                    BackgroundType.CoverImage -> stringResource(R.string.bg_type_cover_image)
+                                    BackgroundType.Image -> stringResource(R.string.bg_type_image)
+                                    BackgroundType.ImageRepeating -> stringResource(R.string.bg_type_repeating_image)
+                                    BackgroundType.Native -> stringResource(R.string.bg_type_native)
+                                    is BackgroundType.Pdf -> stringResource(R.string.bg_type_static_pdf_page)
                                 }
                             Text(
                                 text = typeName,
@@ -346,7 +347,7 @@ fun NotebookConfigDialog(
                 ActionButton(stringResource(R.string.details_notebook_buttons_copy)) {
                     scope.launch {
                         snackManager.displaySnack(
-                            SnackConf(text = "Not implemented!", duration = 2000)
+                            SnackConf(text = notImplemented, duration = 2000)
                         )
                     }
                 }
@@ -384,7 +385,7 @@ fun NotebookLinkRow(
 
     val linkText = linkedUriInit?.let {
         if (it.length > 32) "${it.take(5)}...${it.takeLast(7)}/\${bookTitle}" else it
-    } ?: "none"
+    } ?: stringResource(R.string.notebook_link_none)
 
     Row(
         modifier = Modifier
@@ -406,7 +407,7 @@ fun NotebookLinkRow(
                 },
                 modifier = Modifier.weight(0.3f, fill = false)
             ) {
-                Text("Unlink")
+                Text(stringResource(R.string.notebook_unlink))
             }
         } else {
             Button(
@@ -416,7 +417,7 @@ fun NotebookLinkRow(
                 },
                 modifier = Modifier.weight(0.3f, fill = false)
             ) {
-                Text("Link")
+                Text(stringResource(R.string.notebook_link))
             }
         }
     }

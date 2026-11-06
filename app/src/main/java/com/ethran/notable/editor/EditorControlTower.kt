@@ -29,6 +29,8 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import java.util.Date
 import java.util.UUID
+import com.ethran.notable.R
+import com.ethran.notable.i18n.AppStrings
 
 class EditorControlTower(
     private val scope: CoroutineScope,
@@ -277,7 +279,7 @@ class EditorControlTower(
     fun cutSelectionToClipboard(context: Context) {
         state.clipboard = state.selectionState.selectionToClipboard(page.scroll, context)
         deleteSelection()
-        showHint("Content cut to clipboard", scope)
+        showHint(AppStrings.get(R.string.hint_cut_to_clipboard), scope)
     }
 
     fun copySelectionToClipboard(context: Context) {
@@ -323,7 +325,7 @@ class EditorControlTower(
         selectImagesAndStrokes(scope, page, state, pastedImages, pastedStrokes)
         state.selectionState.placementMode = PlacementMode.Paste
 
-        showHint("Pasted content from clipboard", scope)
+        showHint(AppStrings.get(R.string.hint_pasted), scope)
     }
 }
 

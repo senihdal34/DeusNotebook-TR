@@ -12,6 +12,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.stringResource
+import com.ethran.notable.R
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -41,9 +43,9 @@ fun PlannerWeekBar(
         Modifier.clip(Pill).background(Color.White).border(BorderStroke(1.5.dp, Color.Black), Pill).padding(horizontal = 6.dp),
         horizontalArrangement = Arrangement.spacedBy(2.dp), verticalAlignment = Alignment.CenterVertically
     ) {
-        BarButton("‹ Önceki", false, onPrevious)
-        BarButton("Bu hafta", isCurrentWeek, onThisWeek)
-        BarButton("Sonraki ›", false, onNext)
+        BarButton(stringResource(R.string.planner_previous), false, onPrevious)
+        BarButton(stringResource(R.string.planner_this_week), isCurrentWeek, onThisWeek)
+        BarButton(stringResource(R.string.planner_next), false, onNext)
     }
     }
 }
@@ -73,9 +75,9 @@ fun PlannerDayBar(
             Modifier.clip(Pill).background(Color.White).border(BorderStroke(1.5.dp, Color.Black), Pill).padding(horizontal = 6.dp),
             horizontalArrangement = Arrangement.spacedBy(2.dp), verticalAlignment = Alignment.CenterVertically
         ) {
-            BarButton("‹ Önceki gün", false, onPrevious)
-            BarButton("Hafta", true, onWeek)
-            BarButton("Sonraki gün ›", false, onNext)
+            BarButton(stringResource(R.string.planner_previous_day), false, onPrevious)
+            BarButton(stringResource(R.string.planner_week_button), true, onWeek)
+            BarButton(stringResource(R.string.planner_next_day), false, onNext)
         }
     }
 }
@@ -84,6 +86,6 @@ fun PlannerDayBar(
 @Composable
 fun PlannerBackPill(onClick: () -> Unit, modifier: Modifier = Modifier) {
     Box(modifier.padding(top = 36.dp)) {
-        Box(Modifier.clip(Pill).background(Color.White).border(BorderStroke(1.5.dp, Color.Black), Pill)) { BarButton("‹ Planner", false, onClick) }
+        Box(Modifier.clip(Pill).background(Color.White).border(BorderStroke(1.5.dp, Color.Black), Pill)) { BarButton(stringResource(R.string.planner_back), false, onClick) }
     }
 }

@@ -14,5 +14,5 @@ appId: io.aragonite.notes
     timeout: 60000
 - tapOn: "Save & Exit"
 - extendedWaitUntil:
-    visible: ".*Son Notlar"
+    visible: "Notes"
     timeout: 30000

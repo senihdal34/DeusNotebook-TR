@@ -13,6 +13,8 @@ import com.ethran.notable.ui.SnackConf
 import com.ethran.notable.ui.SnackState
 import com.ethran.notable.utils.logCallStack
 import kotlinx.coroutines.CompletableDeferred
+import com.ethran.notable.R
+import com.ethran.notable.i18n.AppStrings
 
 
 sealed class Operation {
@@ -61,7 +63,7 @@ class History(pageView: PageView) {
                 } else {
                     SnackState.globalSnackFlow.emit(
                         SnackConf(
-                            text = "Nothing to undo/redo",
+                            text = AppStrings.get(R.string.snack_nothing_to_undo),
                             duration = 3000,
                         )
                     )

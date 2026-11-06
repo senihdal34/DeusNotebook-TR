@@ -1,5 +1,9 @@
 package com.ethran.notable.reading.board
 
+import androidx.annotation.StringRes
+import com.ethran.notable.R
+import com.ethran.notable.reading.RS
+
 /** One box on a page: its widget type, size in columns and rows, chrome, and the shelf source or link it shows. */
 data class Tile(
     val type: String, val cw: Int, val rh: Int, val chrome: Chrome = Chrome.Line,
@@ -14,7 +18,10 @@ data class Tile(
     }
 }
 
-class BoardPage(val id: String, val name: String, val tiles: List<Tile>)
+/** A page of the board; [name] is its title in the app language. */
+class BoardPage(val id: String, @StringRes val nameRes: Int, val tiles: List<Tile>) {
+    val name: String get() = RS.get(nameRes)
+}
 
 /**
  * What is on each page of the board, ported from BoardStore.starterPages in lb_board_store.lua: Home is now, Insights
@@ -23,7 +30,10 @@ class BoardPage(val id: String, val name: String, val tiles: List<Tile>)
  */
 object BoardStore {
     val PAGE_IDS = listOf("home", "insights", "library", "decor")
-    private val NAMES = mapOf("home" to "Home", "insights" to "Insights", "library" to "Library", "decor" to "Decor")
+    private val NAMES = mapOf(
+        "home" to R.string.reading_page_home, "insights" to R.string.reading_page_insights,
+        "library" to R.string.reading_page_library, "decor" to R.string.reading_page_decor
+    )
 
     private fun t(type: String, cw: Int, rh: Int, chrome: Chrome = Chrome.Line) = Tile(type, cw, rh, chrome)
     private fun shelf(kind: String, cw: Int, rh: Int) = Tile("shelf", cw, rh, Chrome.Line, kind)
@@ -78,5 +88,5 @@ object BoardStore {
         return PAGE_IDS.map { BoardPage(it, NAMES.getValue(it), pages.getValue(it)) }
     }
 
-    fun pageName(id: String): String = NAMES[id] ?: NAMES.getValue("home")
+    fun pageName(id: String): String = RS.get(NAMES[id] ?: NAMES.getValue("home"))
 }

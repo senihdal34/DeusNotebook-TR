@@ -92,6 +92,19 @@ fun BText(
 /** A styled piece of a [BRuns] line. */
 class Run(val t: String, val b: Boolean = false, val s: Double? = null, val color: Color? = null, val serif: Boolean = false, val i: Boolean = false)
 
+/** The runs of a sentence with the first [arg] in it set bold in [color]: a translation may put the bold part anywhere in the sentence. */
+fun argRuns(text: String, arg: String, color: Color): List<Run> {
+    val at = text.indexOf(arg)
+    if (arg.isEmpty() || at < 0) return listOf(Run(text))
+    val before = text.substring(0, at)
+    val after = text.substring(at + arg.length)
+    return buildList {
+        if (before.isNotEmpty()) add(Run(before))
+        add(Run(arg, b = true, color = color))
+        if (after.isNotEmpty()) add(Run(after))
+    }
+}
+
 /** One line of styled runs on a shared baseline, e.g. a bold number followed by a muted unit. */
 @Composable
 fun BRuns(parts: List<Run>, s: Double = 14.0, color: Color = Ink.black, w: Int? = null, align: TextAlign = TextAlign.Start, modifier: Modifier = Modifier) {

@@ -19,7 +19,7 @@ object PlannerLaunch {
 }
 
 /**
- * Keeps the "Planlayıcı" notebook up to date: one handwritten page per week. They are ordinary pages, so the
+ * Keeps the planner notebook up to date: one handwritten page per week. They are ordinary pages, so the
  * editor's pen, eraser and page swipe work on them; the week tool in the editor moves to the previous or next week.
  */
 @Singleton
@@ -44,9 +44,9 @@ class PlannerService @Inject constructor(private val appRepository: AppRepositor
             val books = appRepository.bookRepository
             val pages = appRepository.pageRepository
 
-            var book = books.findByTitle(PlannerWeeks.NOTEBOOK_TITLE)
+            var book = findBook()
             if (book == null) {
-                book = Notebook(title = PlannerWeeks.NOTEBOOK_TITLE, defaultBackground = "blank")
+                book = Notebook(title = PlannerNames.notebookTitle(), defaultBackground = "blank")
                 books.createEmpty(book)
             }
             val existing = book.pageIds.chunked(400).flatMap { pages.getByIds(it) }.toMutableList()
@@ -61,6 +61,9 @@ class PlannerService @Inject constructor(private val appRepository: AppRepositor
                 }
             }
 
+            // The app language may have changed since the pages were made: rename the planner's own names (titles only).
+            if (relocalize(book, existing)) book = findBook() ?: book
+
             val byBackground = existing.associateBy { it.background }.toMutableMap()
             val result = mutableMapOf<LocalDate, Target>()
             for (monday in mondays) {
@@ -68,7 +71,7 @@ class PlannerService @Inject constructor(private val appRepository: AppRepositor
                 val page = byBackground[bg] ?: Page(
                     notebookId = book.id, background = bg, backgroundType = "native",
                     createdAt = Date.from(monday.atStartOfDay(ZoneId.systemDefault()).toInstant()),
-                    title = "Hafta ${PlannerWeeks.weekOfYear(monday)}"
+                    title = PlannerNames.weekTitle(monday)
                 ).also { pages.create(it); ids.add(it.id); byBackground[bg] = it; changed = true }
                 result[monday] = Target(book.id, page.id)
             }
@@ -77,7 +80,7 @@ class PlannerService @Inject constructor(private val appRepository: AppRepositor
                 val page = byBackground[bg] ?: Page(
                     notebookId = book.id, background = bg, backgroundType = "native",
                     createdAt = Date.from(day.atStartOfDay(ZoneId.systemDefault()).toInstant()),
-                    title = "${PlannerWeeks.DAY_FULL[day.dayOfWeek.value - 1]} ${PlannerWeeks.shortDate(day)}"
+                    title = PlannerNames.dayTitle(day)
                 ).also { pages.create(it); ids.add(it.id); byBackground[bg] = it; changed = true }
                 result[day] = Target(book.id, page.id)
             }
@@ -87,6 +90,41 @@ class PlannerService @Inject constructor(private val appRepository: AppRepositor
                 books.update(book.copy(pageIds = sorted))
             }
             result
+        }
+    }
+
+    /** The planner notebook, whichever language its name was given in. */
+    private suspend fun findBook(): Notebook? {
+        val books = appRepository.bookRepository
+        for (title in PlannerNames.allNotebookTitles()) books.findByTitle(title)?.let { return it }
+        return null
+    }
+
+    /**
+     * Gives the planner notebook and its pages the names of the current app language. Only names the app made are
+     * changed: pages and strokes, and names typed by the user, are not touched. Returns true when anything changed.
+     */
+    private suspend fun relocalize(book: Notebook, pagesOfBook: List<Page>): Boolean {
+        var changed = false
+        val title = PlannerNames.notebookTitle()
+        if (book.title != title && book.title in PlannerNames.allNotebookTitles()) {
+            appRepository.bookRepository.update(book.copy(title = title))
+            changed = true
+        }
+        for (page in pagesOfBook) {
+            val newTitle = PlannerNames.renamed(page.background, page.title) ?: continue
+            appRepository.pageRepository.updateTitle(page.id, newTitle)
+            changed = true
+        }
+        return changed
+    }
+
+    /** Renames the planner after an app language change. Does nothing when there is no planner notebook yet. */
+    suspend fun relocalize(): Unit = withContext(NonCancellable) {
+        mutex.withLock {
+            val book = findBook() ?: return@withLock
+            val pages = book.pageIds.chunked(400).flatMap { appRepository.pageRepository.getByIds(it) }
+            relocalize(book, pages)
         }
     }
 

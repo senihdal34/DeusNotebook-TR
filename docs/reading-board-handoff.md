@@ -1,6 +1,6 @@
 # Okuma panosu (Reading board) — devir belgesi
 
-Branch: `feat/reading-board` (bu depoda, `feat/planner-pins-palm-guard` üzerinden açıldı). Uygulama adı: **A Deus Notebook** (kod deposunun adı `aragonite-tr`, paket `io.aragonite.notes`).
+Branch: `feat/reading-board` (bu depoda, `feat/planner-pins-palm-guard` üzerinden açıldı). Uygulama adı: **A Deus Notebook** (kod deposunun adı `DeusNotebook-TR`, paket `io.aragonite.notes`).
 
 ## 1. İstenen
 Deus Notebook'a yeni bir **"Reading" sekmesi** eklenecek: sekme çubuğunda `Planner | Notes | ★ Favorites | Reading`. Sekmenin içeriği **BookOrbit Board** panosunun **birebir** tasarımı ve işlevi. Bir kitaba dokununca **NeoReader** (`com.onyx.kreader`) açılır. KOReader tamamen bırakıldı; veri **NeoReader'dan** gelir. Kullanıcı: Senih, yıllık hedef 15 kitap, Türkçe sade dil. Lisans uyarısı yapma (kullanıcı sadece kendi tabletinde kullanıyor). Sunucu/Docker yok, hiçbir şey VPS'e gitmez.

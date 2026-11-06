@@ -4,6 +4,8 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class ReadingTextTest {
+    init { EnglishStrings.install() }   // the logic speaks the app language; the test reads the English file
+
     @Test fun greetingFollowsTheHour() {
         assertEquals("Good morning, Senih", ReadingText.greeting(8, "Senih"))
         assertEquals("Good afternoon, Senih", ReadingText.greeting(14, "Senih"))

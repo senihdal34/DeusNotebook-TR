@@ -6,5 +6,5 @@ appId: io.aragonite.notes.debug
 - assertVisible: "Granted ✓"
 - takeScreenshot: .e2e-shots/smoke-welcome
 - tapOn: "Continue"
-- assertVisible: "Notlar"
+- assertVisible: "Notes"
 - takeScreenshot: .e2e-shots/smoke-home

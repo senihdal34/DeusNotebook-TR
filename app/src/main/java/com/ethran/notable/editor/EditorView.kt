@@ -66,6 +66,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import com.ethran.notable.R
+import com.ethran.notable.i18n.AppStrings
 
 private val log = ShipBook.getLogger("EditorView")
 
@@ -116,7 +118,7 @@ fun EditorView(
                 log.i("Could not find page, Cleaning book")
                 SnackState.globalSnackFlow.tryEmit(
                     SnackConf(
-                        text = "Could not find page, cleaning book",
+                        text = AppStrings.get(R.string.snack_page_not_found),
                         duration = 4000
                     )
                 )

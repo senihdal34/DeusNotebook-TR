@@ -197,12 +197,12 @@ fun LibraryContent(
                     ) {
                         Icon(
                             imageVector = FeatherIcons.FilePlus,
-                            contentDescription = "New Capture",
+                            contentDescription = stringResource(R.string.capture_new),
                             tint = Color.Black,
                             modifier = Modifier.size(48.dp)
                         )
                         Text(
-                            "New Capture",
+                            stringResource(R.string.capture_new),
                             style = androidx.compose.material.MaterialTheme.typography.body2,
                             color = Color.DarkGray
                         )
@@ -233,7 +233,7 @@ fun LibraryContent(
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                "Syncing...",
+                                stringResource(R.string.sync_in_progress),
                                 style = androidx.compose.material.MaterialTheme.typography.caption,
                                 color = Color.DarkGray
                             )
@@ -435,7 +435,7 @@ fun NotebookImportPanel(
                     }
                 } catch (e: Exception) {
                     log.e("contentPicker failed: ${e.message}", e)
-                    SnackState.globalSnackFlow.tryEmit(SnackConf(text = "Importing failed: ${e.message}"))
+                    SnackState.globalSnackFlow.tryEmit(SnackConf(text = context.getString(R.string.snack_import_failed, e.message ?: "")))
                 }
             }
             // Import Notebook (Bottom Half)

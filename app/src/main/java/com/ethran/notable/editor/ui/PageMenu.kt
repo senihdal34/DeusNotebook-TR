@@ -22,6 +22,8 @@ import com.ethran.notable.data.AppRepository
 import com.ethran.notable.data.deletePage
 import com.ethran.notable.ui.noRippleClickable
 import kotlinx.coroutines.launch
+import androidx.compose.ui.res.stringResource
+import com.ethran.notable.R
 
 
 @Composable
@@ -60,7 +62,7 @@ fun PageMenu(
                             }
                         }
                 ) {
-                    Text("Move Left")
+                    Text(stringResource(R.string.page_move_left))
                 }
 
                 Box(
@@ -75,7 +77,7 @@ fun PageMenu(
                                 )
                             }
                         }) {
-                    Text("Move right")
+                    Text(stringResource(R.string.page_move_right))
                 }
                 Box(
                     Modifier
@@ -85,7 +87,7 @@ fun PageMenu(
                                 appRepository.newPageInBook(notebookId, index + 1)
                             }
                         }) {
-                    Text("Insert after")
+                    Text(stringResource(R.string.page_insert_after))
                 }
             }
 
@@ -97,7 +99,7 @@ fun PageMenu(
                             appRepository.duplicatePage(pageId)
                         }
                     }) {
-                Text("Duplicate")
+                Text(stringResource(R.string.page_duplicate))
             }
             if (canDelete) {
                 Box(
@@ -108,7 +110,7 @@ fun PageMenu(
                                 deletePage(appRepository, pageId, context.filesDir)
                             }
                         }) {
-                    Text("Delete")
+                    Text(stringResource(R.string.action_delete))
                 }
             }
         }

@@ -13,8 +13,8 @@ class PlannerWeeksTest {
     }
 
     @Test fun `label shows range and week of year`() {
-        assertEquals("26 Eki – 1 Kas", PlannerWeeks.rangeLabel(LocalDate.of(2026, 10, 26)))
-        assertEquals("26 Eki – 1 Kas · 44/53", PlannerWeeks.weekLabel(LocalDate.of(2026, 10, 26)))   // 2026 has 53 ISO weeks
+        assertEquals("26 Oct – 1 Nov", PlannerWeeks.rangeLabel(LocalDate.of(2026, 10, 26)))
+        assertEquals("26 Oct – 1 Nov · 44/53", PlannerWeeks.weekLabel(LocalDate.of(2026, 10, 26)))   // 2026 has 53 ISO weeks
         assertEquals("43/52", PlannerWeeks.weekOfYear(LocalDate.of(2027, 10, 25)))
     }
 
@@ -71,4 +71,14 @@ class PlannerWeeksTest {
 
     @Test fun `iso week 53 in 2026`() =
         assertEquals(53, PlannerWeeks.weekNumber(LocalDate.of(2026, 12, 31)))
+
+    @Test fun `labels follow the language`() {
+        val monday = LocalDate.of(2026, 10, 26)
+        assertEquals("26 Eki – 1 Kas", PlannerWeeks.rangeLabel(monday, java.util.Locale("tr")))
+        assertEquals("26 oct – 1 nov", PlannerWeeks.rangeLabel(monday, java.util.Locale("es")))
+        assertEquals("10月26日 – 11月1日", PlannerWeeks.rangeLabel(monday, java.util.Locale.SIMPLIFIED_CHINESE))
+        assertEquals("Pzt", PlannerWeeks.dayName(0, java.util.Locale("tr")))
+        assertEquals("Sunday", PlannerWeeks.dayFull(6, java.util.Locale.ENGLISH))
+        assertEquals("Ekim", PlannerWeeks.monthName(monday, java.util.Locale("tr")))
+    }
 }

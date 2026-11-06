@@ -1,17 +1,26 @@
 package com.ethran.notable.ui.components
 
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.TabRowDefaults.Divider
+import androidx.compose.foundation.background
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.ethran.notable.editor.ui.SelectMenu
 
+/** A row label in the house style: plain sans, dark. */
+@Composable
+private fun RowLabel(text: String, modifier: Modifier = Modifier, maxLines: Int = 2) =
+    Text(text, modifier = modifier, fontFamily = House.Sans, fontSize = 20.sp, fontWeight = FontWeight.Medium, color = House.Ink, maxLines = maxLines)
 
 @Composable
 fun <T> SelectorRow(
@@ -25,21 +34,14 @@ fun <T> SelectorRow(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = 12.dp, horizontal = 4.dp),
+            .padding(vertical = 14.dp, horizontal = 4.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(
-            text = label,
-            modifier = Modifier.weight(1f),
-            style = MaterialTheme.typography.body1,
-            color = MaterialTheme.colors.onSurface,
-            maxLines = labelMaxLines
-        )
-        SelectMenu(
-            options = options,
-            value = value,
-            onChange = onValueChange,
-        )
+        RowLabel(label, Modifier.weight(1f), labelMaxLines)
+        // The current value sits in a round outline, like the buttons on Home.
+        Box(Modifier.clip(House.Pill).border(1.5.dp, House.Ink, House.Pill).padding(horizontal = 18.dp, vertical = 8.dp)) {
+            SelectMenu(options = options, value = value, onChange = onValueChange)
+        }
     }
     SettingsDivider()
 }
@@ -52,20 +54,14 @@ fun SettingToggleRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 2.dp, start = 4.dp, end = 4.dp, bottom = 0.dp),
+            .padding(vertical = 10.dp, horizontal = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(
-            text = label,
-            modifier = Modifier.weight(1f), // Take all available space
-            style = MaterialTheme.typography.body1,
-            color = MaterialTheme.colors.onSurface,
-            maxLines = 2 // allow wrapping for long labels
-        )
+        RowLabel(label, Modifier.weight(1f))
         OnOffSwitch(
             checked = value,
             onCheckedChange = onToggle,
-            modifier = Modifier.padding(start = 8.dp, top = 10.dp, bottom = 12.dp),
+            modifier = Modifier.padding(start = 12.dp),
         )
     }
     SettingsDivider()
@@ -73,9 +69,5 @@ fun SettingToggleRow(
 
 @Composable
 fun SettingsDivider() {
-    Divider(
-        color = MaterialTheme.colors.onSurface.copy(alpha = 0.12f),
-        thickness = 1.dp,
-        modifier = Modifier.padding(top = 0.dp, bottom = 4.dp)
-    )
+    Box(Modifier.fillMaxWidth().height(1.dp).background(House.Grey2.copy(alpha = 0.5f)))
 }

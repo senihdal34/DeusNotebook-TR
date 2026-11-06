@@ -9,6 +9,10 @@
     <!-- The reading board reads NeoReader's library and reading log through its content providers. -->
     <queries>
         <package android:name="com.onyx.kreader" />
+        <package android:name="com.onyx" />
+        <package android:name="com.onyx.android.note" />
+        <package android:name="com.github.catfriend1.syncthingfork" />
+        <package android:name="com.nutomic.syncthingandroid" />
         <provider android:authorities="com.onyx.content.database.ContentProvider" />
         <provider android:authorities="com.onyx.kreader.statistics.provider" />
     </queries>
@@ -27,6 +31,13 @@
         android:requestLegacyExternalStorage="true"
         android:enableOnBackInvokedCallback="false"
         tools:targetApi="33">
+
+        <activity
+            android:name=".i18n.RestartActivity"
+            android:exported="false"
+            android:process=":restart"
+            android:excludeFromRecents="true"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
 
         <activity
             android:name=".MainActivity"

@@ -50,6 +50,7 @@ object OnyxHWREngine {
      * Returns true if service is ready.
      */
     suspend fun bindAndAwait(context: Context, timeoutMs: Long = 2000): Boolean {
+        setLanguage(com.ethran.notable.i18n.LanguagePrefs.writing(context).code)
         if (bound && service != null) return true
 
         // Create a fresh latch for this bind attempt
@@ -89,6 +90,23 @@ object OnyxHWREngine {
 
     @Volatile private var initialized = false
 
+    /** Recognizer language (MyScript code, e.g. "tr_TR"); follows Settings → Writing language. */
+    @Volatile var language: String = com.ethran.notable.i18n.WritingLanguage.DEFAULT_CODE
+        private set
+
+    /** What the recognizer is really given: [language] when its resources are on the tablet, else English. */
+    @Volatile var effectiveLanguage: String = com.ethran.notable.i18n.WritingLanguage.DEFAULT_CODE
+        private set
+
+    /** Switches the recognizer language; the next recognition re-initializes the engine with it. */
+    fun setLanguage(code: String) {
+        val effective = com.ethran.notable.i18n.WritingLanguageAvailability.effective(code)
+        if (code == language && effective == effectiveLanguage) return
+        language = code
+        effectiveLanguage = effective
+        initialized = false
+    }
+
     /** User vocabulary applied to every recognition result (null = engine output unchanged). */
     @Volatile var glossary: HwrGlossary? = null
 
@@ -97,10 +115,10 @@ object OnyxHWREngine {
      */
     private suspend fun ensureInitialized(svc: IHWRService, viewWidth: Float, viewHeight: Float) {
         if (initialized) return
-        log.i("Initializing OnyxHWR recognizer...")
+        log.i("Initializing OnyxHWR recognizer (lang=$effectiveLanguage, chosen=$language)...")
 
         val inputArgs = HWRInputArgs().apply {
-            lang = "tr_TR"
+            lang = effectiveLanguage
             contentType = "Text"
             recognizerType = "MS_ON_SCREEN"
             this.viewWidth = viewWidth
@@ -348,7 +366,7 @@ object OnyxHWREngine {
 
         // Field 1: lang (string)
         writeTag(out, 1, 2)
-        writeString(out, "tr_TR")
+        writeString(out, effectiveLanguage)
 
         // Field 2: contentType (string)
         writeTag(out, 2, 2)

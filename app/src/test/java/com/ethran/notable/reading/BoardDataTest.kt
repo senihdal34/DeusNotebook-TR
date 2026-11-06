@@ -11,6 +11,8 @@ import java.time.LocalDate
 import java.time.ZoneId
 
 class BoardDataTest {
+    init { EnglishStrings.install() }   // the logic speaks the app language; the test reads the English file
+
     private val today = LocalDate.of(2026, 10, 31)   // a Saturday
     private fun book(id: String, progress: Double = 0.0, left: Int? = null, finished: Long? = null, series: String? = null, added: Long = 0L, last: Long? = null) =
         RBook(id, "/sdcard/Books/$id.epub", id, listOf("A"), series, progress, 100, last, finished, added, null, left)

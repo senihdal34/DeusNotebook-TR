@@ -30,6 +30,8 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.math.abs
+import com.ethran.notable.R
+import com.ethran.notable.i18n.AppStrings
 
 private val log = ShipBook.getLogger("GestureReceiver")
 
@@ -133,12 +135,12 @@ fun EditorGestureReceiver(
                                     controlTower.setIsDrawing(false) // unfreeze the screen
                                     crossPosition = gestureState.getLastPositionIO()
                                     rectangleBounds = gestureState.calculateRectangleBounds()
-                                    showHint("Selection mode!", coroutineScope, 1500)
+                                    showHint(AppStrings.get(R.string.hint_selection_mode), coroutineScope, 1500)
                                 }
                                 gestureState.checkSmoothScrolling()
                                 gestureState.checkContinuousZoom()
                                 if (gestureState.checkHoldingTwoFingers())
-                                    showHint("Drag mode!", coroutineScope, 1500)
+                                    showHint(AppStrings.get(R.string.hint_drag_mode), coroutineScope, 1500)
 
                             }
                             if (gestureState.gestureMode == GestureMode.Scroll) {
